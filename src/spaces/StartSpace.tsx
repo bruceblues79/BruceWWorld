@@ -1,12 +1,44 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useProgress } from '@react-three/drei'
+import * as THREE from 'three'
 import Toybox from './Toybox'
 import './StartSpace.css'
 
 const CAMERA_POSITION: [number, number, number] = [0, 1.6, 0]
 const LOOK_AT: [number, number, number] = [0, 0.6, -2]
-const BACKGROUND_COLOR = '#f2ddbb'
+const THEME_TITLE = 'svalbard post world'
+
+/** 程序化生成竖直渐变天空纹理：顶冷蓝 → 地平线暖 → 底暖沙 */
+function useSkyTexture(): THREE.Texture {
+  return useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 32
+    canvas.height = 1024
+    const ctx = canvas.getContext('2d')!
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height)
+    grad.addColorStop(0.0, '#5d7c98') // 顶部 — 冷蓝
+    grad.addColorStop(0.3, '#a4b6c5') // 上 — 冷灰蓝
+    grad.addColorStop(0.5, '#cdbfa8') // 中 — 灰暖
+    grad.addColorStop(0.7, '#dec09a') // 下 — 地平线暖
+    grad.addColorStop(1.0, '#f3d3a6') // 底 — 暖沙
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.colorSpace = THREE.SRGBColorSpace
+    tex.minFilter = THREE.LinearFilter
+    tex.magFilter = THREE.LinearFilter
+    tex.needsUpdate = true
+    return tex
+  }, [])
+}
+
+/** 把天空纹理挂到 scene.background，卸载时释放 */
+function SceneBackground() {
+  const sky = useSkyTexture()
+  useEffect(() => () => sky.dispose(), [sky])
+  return <primitive attach="background" object={sky} />
+}
 
 // 初始视距与初始俯仰角，由相机/目标位置推导，避免手写误差
 const VIEW_DISTANCE = Math.hypot(
@@ -70,7 +102,7 @@ function StartSpace() {
           far: 100,
         }}
       >
-        <color attach="background" args={[BACKGROUND_COLOR]} />
+        <SceneBackground />
         <ambientLight intensity={0.35} color="#fff2e0" />
         <directionalLight position={[3, 5, 2]} intensity={2.2} color="#fff1df" />
         <Suspense fallback={null}>
@@ -91,6 +123,9 @@ function StartSpace() {
         />
       </Canvas>
       <LoadingOverlay />
+      <div className="start-theme-overlay" aria-hidden="true">
+        {THEME_TITLE}
+      </div>
       {showRotateHint && (
         <div className="start-rotate-hint" role="note">
           请横屏浏览，获得最佳体验

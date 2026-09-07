@@ -83,3 +83,22 @@
 .start-tap:active {
   transform: scale(0.96);
 }
+
+.start-theme-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 7vh;
+  z-index: 25;
+  pointer-events: none;
+  user-select: none;
+  text-align: center;
+  font-family: ui-serif, Georgia, 'Times New Roman', serif;
+  font-weight: 300;
+  font-size: clamp(18px, 2.4vw, 34px);
+  letter-spacing: 0.85em;
+  text-indent: 0.85em;
+  color: rgba(255, 247, 232, 0.36);
+  text-shadow: 0 1px 10px rgba(40, 28, 14, 0.22);
+  mix-blend-mode: screen;
+}
