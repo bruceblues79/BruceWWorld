@@ -17,11 +17,12 @@ function useSkyTexture(): THREE.Texture {
     canvas.height = 1024
     const ctx = canvas.getContext('2d')!
     const grad = ctx.createLinearGradient(0, 0, 0, canvas.height)
-    grad.addColorStop(0.0, '#5d7c98') // 顶部 — 冷蓝
-    grad.addColorStop(0.3, '#a4b6c5') // 上 — 冷灰蓝
-    grad.addColorStop(0.5, '#cdbfa8') // 中 — 灰暖
-    grad.addColorStop(0.7, '#dec09a') // 下 — 地平线暖
-    grad.addColorStop(1.0, '#f3d3a6') // 底 — 暖沙
+    grad.addColorStop(0.0, '#3a5f7e') // 顶部 — 深天蓝
+    grad.addColorStop(0.25, '#7798b8') // 上 — 浅天蓝
+    grad.addColorStop(0.45, '#a3b8c5') // 地平线上 — 灰蓝
+    grad.addColorStop(0.55, '#a8b9b9') // 地平线 — 灰青过渡
+    grad.addColorStop(0.7, '#5a87a4') // 海面浅蓝
+    grad.addColorStop(1.0, '#1f4769') // 底部 — 深海水
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     const tex = new THREE.CanvasTexture(canvas)
