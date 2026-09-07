@@ -5,7 +5,7 @@ import Toybox from './Toybox'
 import './StartSpace.css'
 
 const CAMERA_POSITION: [number, number, number] = [0, 1.6, 0]
-const LOOK_AT: [number, number, number] = [0, 1.3, -1.5]
+const LOOK_AT: [number, number, number] = [0, 0.6, -2]
 const BACKGROUND_COLOR = '#f2ddbb'
 
 // 初始视距与初始俯仰角，由相机/目标位置推导，避免手写误差
