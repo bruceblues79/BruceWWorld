@@ -1,3 +1,8 @@
+# brucewworld · v0.0.0
+
+> Vite 8 · React 19 · TypeScript 6 · three 0.185 · @react-three/fiber 9 · @react-three/drei 10
+> Node 22+ / 包管理 npm / Lint oxlint / 单端口静态站点（GitHub Pages 友好）
+
 **编码前先思考**
 **不要假设,不要掩盖困惑,要明确权衡。**
 - 明确陈述你的假设。如果不确定,要提出问题。- 如果存在多种解释方案,要呈现出来--不要默默选择。- 如果有更简单的方法,要说明。必要时提出异议。- 如果有不清楚的地方,暂停。指出困惑点并提问。

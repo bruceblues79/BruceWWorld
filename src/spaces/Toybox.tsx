@@ -4,7 +4,7 @@ import type * as THREE from 'three'
 
 const MODEL_URL = '/assets/glb/toybox.glb'
 // 整个 toybox + tap 按钮的「世界锚点」
-const MODEL_POSITION: [number, number, number] = [0, 0.15, -2]
+const MODEL_POSITION: [number, number, number] = [0, 0.3, -2]
 // tap 按钮在 toybox 局部坐标中的偏移，与模型保持相对位置（相机旋转时随之一起运动）
 const TAP_LOCAL_OFFSET: [number, number, number] = [0, 0.15, 0.25]
 
