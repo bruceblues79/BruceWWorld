@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "oxc.oxc-vscode",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next",
+    "yoavbls.pretty-ts-errors",
+    "trytriplex.triplex-vsce",
+    "assettoollabs.mesh-viewer-vscode",
+    "wiscaksono.threejs-snippets",
+    "slevesque.shader"
+  ]
+}
