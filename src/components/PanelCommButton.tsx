@@ -89,6 +89,9 @@ export default function PanelCommButton({
         anchorX="center"
         anchorY="middle"
         color={textColor}
+        // troika 派生材质经原型链继承 base 材质；设 own property 关闭
+        // Canvas 默认的 ACES toneMapping，否则纯白被压成灰白（同 frameMat 的处理）
+        material-toneMapped={false}
       >
         {label}
       </Text>
