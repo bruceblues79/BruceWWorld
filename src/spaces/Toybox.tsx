@@ -10,9 +10,10 @@ const TAP_LOCAL_OFFSET: [number, number, number] = [0, 0.15, 0.25]
 
 // 开盒动画：三段均以「增量」驱动 —— 节点自带 Blender 初始姿态（root_hinge 已绕 z 180°、
 // root_rotate 已绕 y 90°），绝对目标会让后两段失去动作。
-const HINGE_SPIN = Math.PI // root_hinge 再绕局部 z 转 180°
+// 旋转方向：初始实现与预期相反，用户 2026-09-08 确认两处旋转都取负向。
+const HINGE_SPIN = -Math.PI // root_hinge 再绕局部 z 转 -180°
 const ROOT_SHIFT_X = -0.6 // root（glb 场景根）沿局部 x 平移
-const ROTATE_TURN = Math.PI / 2 // root_rotate 再绕局部 y 转 90°
+const ROTATE_TURN = -Math.PI / 2 // root_rotate 再绕局部 y 转 -90°
 const PAUSE_SECONDS = 0.3 // 段间停顿
 const EASE = 'power2.inOut'
 
@@ -26,6 +27,16 @@ interface ToyboxProps {
 
 function Toybox({ phase, onTapStart, onOpened }: ToyboxProps) {
   const { scene } = useGLTF(MODEL_URL)
+
+  // 开启模型阴影：给所有 mesh 打 cast/receive 标（只动 per-mesh 标志，不改材质参数）
+  useEffect(() => {
+    scene.traverse((object) => {
+      if (object.type === 'Mesh') {
+        object.castShadow = true
+        object.receiveShadow = true
+      }
+    })
+  }, [scene])
 
   // 用 ref 持有最新回调，避免动画 effect 因回调引用变化而重建/重播
   const onOpenedRef = useRef(onOpened)

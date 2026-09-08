@@ -97,6 +97,7 @@ function StartSpace() {
   return (
     <div className="start-space">
       <Canvas
+        shadows
         dpr={[1, 2]}
         camera={{
           position: CAMERA_POSITION,
@@ -106,7 +107,15 @@ function StartSpace() {
         }}
       >
         <SceneBackground />
-        <directionalLight position={[3, 5, 2]} intensity={2.2} color="#fff1df" />
+        <directionalLight
+          position={[3, 5, 2]}
+          intensity={2.2}
+          color="#fff1df"
+          castShadow
+          shadow-mapSize={[2048, 2048]}
+          shadow-bias={-0.0004}
+          shadow-normalBias={0.02}
+        />
         <Suspense fallback={null}>
           <Toybox
             phase={phase}
