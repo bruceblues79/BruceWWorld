@@ -17,7 +17,15 @@
   gap: 16px;
   align-items: center;
   justify-content: center;
-  background: var(--warm-bg);
+  background: linear-gradient(
+    to bottom,
+    #3a5f7e 0%,
+    #7798b8 25%,
+    #a3b8c5 45%,
+    #a8b9b9 55%,
+    #5a87a4 70%,
+    #1f4769 100%
+  );
   color: var(--ink-muted);
 }
 

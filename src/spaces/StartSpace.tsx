@@ -104,7 +104,6 @@ function StartSpace() {
         }}
       >
         <SceneBackground />
-        <ambientLight intensity={0.35} color="#fff2e0" />
         <directionalLight position={[3, 5, 2]} intensity={2.2} color="#fff1df" />
         <Suspense fallback={null}>
           <Toybox />

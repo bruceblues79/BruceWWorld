@@ -1,6 +1,5 @@
 :root {
   color-scheme: light;
-  --warm-bg: #f2ddbb;
   --ink: #4a2f15;
   --ink-muted: rgba(74, 47, 21, 0.62);
   --glass: rgba(255, 252, 246, 0.78);
@@ -30,7 +29,15 @@ body,
 body {
   margin: 0;
   overflow: hidden;
-  background: var(--warm-bg);
+  background: linear-gradient(
+    to bottom,
+    #3a5f7e 0%,
+    #7798b8 25%,
+    #a3b8c5 45%,
+    #a8b9b9 55%,
+    #5a87a4 70%,
+    #1f4769 100%
+  );
 }
 
 button {
