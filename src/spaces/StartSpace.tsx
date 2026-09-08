@@ -121,8 +121,8 @@ function StartSpace() {
         <SceneBackground />
         <directionalLight
           ref={lightRef}
-          position={[1, 6, 2]}
-          intensity={2.2}
+          position={[2, 6, 3]}
+          intensity={1.2}
           color="#fff1df"
           castShadow
           shadow-mapSize={[1024, 1024]}

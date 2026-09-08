@@ -65,6 +65,7 @@ export default function PanelComm({
     frameMat.current = new THREE.MeshBasicMaterial({
       color: '#ffffff',
       side: THREE.DoubleSide,
+      toneMapped: false, // Basic 材质不受 toneMapping 影响，保持纯色
     })
 
     const plane = root.getObjectByName('plane')
