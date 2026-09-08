@@ -2,7 +2,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
-import Toybox from './Toybox'
+import Toybox, { type Phase } from './Toybox'
 import './StartSpace.css'
 
 const CAMERA_POSITION: [number, number, number] = [0, 1.6, 0]
@@ -91,6 +91,8 @@ function LoadingOverlay() {
 
 function StartSpace() {
   const showRotateHint = useShowRotateHint()
+  // starter 场景阶段：default（待开）→ opening（开盒动画中）→ opened（闭环完成）
+  const [phase, setPhase] = useState<Phase>('default')
 
   return (
     <div className="start-space">
@@ -106,7 +108,11 @@ function StartSpace() {
         <SceneBackground />
         <directionalLight position={[3, 5, 2]} intensity={2.2} color="#fff1df" />
         <Suspense fallback={null}>
-          <Toybox />
+          <Toybox
+            phase={phase}
+            onTapStart={() => setPhase('opening')}
+            onOpened={() => setPhase('opened')}
+          />
           <Environment files="/assets/hdr/starter_space.hdr" />
         </Suspense>
         <OrbitControls
