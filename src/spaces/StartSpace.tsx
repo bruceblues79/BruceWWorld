@@ -109,7 +109,7 @@ function StartSpace() {
   return (
     <div className="start-space">
       <Canvas
-        shadows
+        shadows="percentage"
         dpr={[1, 2]}
         camera={{
           position: CAMERA_POSITION,
