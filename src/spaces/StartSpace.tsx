@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, useProgress } from '@react-three/drei'
+import { OrbitControls, Environment, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import Toybox from './Toybox'
 import './StartSpace.css'
@@ -108,6 +108,7 @@ function StartSpace() {
         <directionalLight position={[3, 5, 2]} intensity={2.2} color="#fff1df" />
         <Suspense fallback={null}>
           <Toybox />
+          <Environment files="/assets/hdr/starter_space.hdr" />
         </Suspense>
         <OrbitControls
           makeDefault
