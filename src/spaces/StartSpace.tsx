@@ -121,11 +121,11 @@ function StartSpace() {
         <SceneBackground />
         <directionalLight
           ref={lightRef}
-          position={[3, 6, -2]}
+          position={[1, 6, 2]}
           intensity={2.2}
           color="#fff1df"
           castShadow
-          shadow-mapSize={[2048, 2048]}
+          shadow-mapSize={[1024, 1024]}
           shadow-camera-near={0.5}
           shadow-camera-far={20}
           shadow-camera-left={-2.5}
