@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
@@ -94,6 +94,18 @@ function StartSpace() {
   // starter 场景阶段：default（待开）→ opening（开盒动画中）→ opened（闭环完成）
   const [phase, setPhase] = useState<Phase>('default')
 
+  // 把方向光的 shadow 投影焦点拉到 toybox 中心 —— 默认 target=(0,0,0) 会让 frustum
+  // 对偏在 z=-2 的模型取样失真、阴影看上去"飘"到远处。
+  const lightRef = useRef<THREE.DirectionalLight>(null!)
+  useEffect(() => {
+    const light = lightRef.current
+    if (!light) return
+    light.target.position.set(0, 0.3, -2)
+    light.target.updateMatrixWorld()
+    // DirectionalLight.target 默认不在 scene 中，必须手动加入才能参与变换
+    light.parent?.add(light.target)
+  }, [])
+
   return (
     <div className="start-space">
       <Canvas
@@ -108,13 +120,20 @@ function StartSpace() {
       >
         <SceneBackground />
         <directionalLight
+          ref={lightRef}
           position={[3, 5, 2]}
           intensity={2.2}
           color="#fff1df"
           castShadow
           shadow-mapSize={[2048, 2048]}
-          shadow-bias={-0.0004}
-          shadow-normalBias={0.02}
+          shadow-camera-near={0.5}
+          shadow-camera-far={20}
+          shadow-camera-left={-2.5}
+          shadow-camera-right={2.5}
+          shadow-camera-top={2.5}
+          shadow-camera-bottom={-2.5}
+          shadow-bias={-0.0001}
+          shadow-normalBias={0.005}
         />
         <Suspense fallback={null}>
           <Toybox

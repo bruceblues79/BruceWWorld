@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Html, useGLTF } from '@react-three/drei'
+import { ContactShadows, Html, useGLTF } from '@react-three/drei'
 import gsap from 'gsap'
 
 const MODEL_URL = '/assets/glb/toybox.glb'
@@ -85,6 +85,19 @@ function Toybox({ phase, onTapStart, onOpened }: ToyboxProps) {
           </button>
         </Html>
       )}
+      {/* grounding shadow —— drei 从俯视角渲深度到 alpha 平面，给小物件（树/桥/壳）
+          一个柔和的"贴地锚定"阴影，弥补 directional shadow 在细小几何上的不足。
+          frames=Infinity 让它跟动画每帧重渲；模型 group 仅作平移，ContactShadows
+          平面不受 root 旋转影响。 */}
+      <ContactShadows
+        position={[0, 0, 0]}
+        scale={5}
+        resolution={1024}
+        blur={2}
+        far={2}
+        opacity={0.5}
+        frames={Infinity}
+      />
     </group>
   )
 }
