@@ -106,8 +106,10 @@ function StartSpace() {
     light.parent?.add(light.target)
   }, [])
 
+  // Canvas 与 DOM overlays 平行组织：3D 内容不包在任何 DOM 容器里，
+  // overlays 用 fixed 相对视口定位，将来引入 XR 不受 DOM 结构影响
   return (
-    <div className="start-space">
+    <>
       <Canvas
         shadows="percentage"
         dpr={[1, 2]}
@@ -166,7 +168,7 @@ function StartSpace() {
           请横屏浏览，获得最佳体验
         </div>
       )}
-    </div>
+    </>
   )
 }
 
