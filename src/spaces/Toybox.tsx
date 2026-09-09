@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
 import gsap from 'gsap'
-import PanelCommButton from '../components/PanelCommButton'
+import UiKitPanelButton from '../components/UiKitPanelButton'
 
 const MODEL_URL = '/assets/glb/toybox.glb'
 // 整个 toybox + tap 按钮的「世界锚点」
@@ -9,8 +9,6 @@ const MODEL_POSITION: [number, number, number] = [0, 0.3, -2]
 // tap 面板在 toybox 局部坐标中的偏移，与模型保持相对位置（相机旋转时随之一起运动）。
 // z=0.65：盒体前缘在局部 z≈0.55（世界 -1.45），面板厚 0.03，再留 ~0.1 悬浮间隙防穿模
 const TAP_LOCAL_OFFSET: [number, number, number] = [0, 0.3, 0.65]
-// 4 个中文字宽 ≈ fontSize×4 ≈ 0.3，须小于面板内宽（0.4×面板内占比）
-const TAP_FONT_SIZE = 0.07
 
 // 开盒动画：三段均以「增量」驱动 —— 节点自带 Blender 初始姿态（root_hinge 已绕 z 180°、
 // root_rotate 已绕 y 90°），绝对目标会让后两段失去动作。
@@ -78,13 +76,9 @@ function Toybox({ phase, onTapStart, onOpened }: ToyboxProps) {
     <group position={MODEL_POSITION}>
       <primitive object={scene} />
       {phase === 'default' && (
-        <PanelCommButton
+        <UiKitPanelButton
           position={TAP_LOCAL_OFFSET}
-          scaleX={0.4}
-          scaleY={0.2}
-          fontSize={TAP_FONT_SIZE}
           label="点击打开"
-          textColor="#ffffff"
           onClick={onTapStart}
         />
       )}
