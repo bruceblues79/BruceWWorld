@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
 import gsap from 'gsap'
-import UiKitPanelButton from '../components/UiKitPanelButton'
+import ToyboxTapButton from '../components/ToyboxTapButton'
 
 const MODEL_URL = '/assets/glb/toybox.glb'
 // 整个 toybox + tap 按钮的「世界锚点」
@@ -76,7 +76,7 @@ function Toybox({ phase, onTapStart, onOpened }: ToyboxProps) {
     <group position={MODEL_POSITION}>
       <primitive object={scene} />
       {phase === 'default' && (
-        <UiKitPanelButton
+        <ToyboxTapButton
           position={TAP_LOCAL_OFFSET}
           label="点击打开"
           onClick={onTapStart}

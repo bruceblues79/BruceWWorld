@@ -1,11 +1,11 @@
 import { Suspense } from 'react'
 import { Text } from '@react-three/uikit'
+import { Button } from '@react-three/uikit-default'
 import type { Vector3Tuple } from 'three'
-import { UiKitButton } from './uikit'
 
-// uikit 面板按钮（基于官方 default kit 的 Button）：
-// - variant/size/主题颜色与 hover 走 shadcn 主题（@react-three/uikit-default）
-// - 容器尺寸、位置、走 R3F 原生事件与 pointer cursor 跟 core 一致
+// toybox 开盒场景的悬浮点击按钮：
+// - 直接使用 @react-three/uikit-default 的 Button（ghost variant）
+// - 容器尺寸、位置走 R3F 原生事件与 pointer cursor
 // - 文字走 MSDF：MSDF JSON 离线预生成（fetcher 异步挂起），运行时零 wasm/worker
 
 // 字体资产由 scripts 流程离线生成；加字时需同步扩 TTF 子集与该 JSON（见 memory/脚本）
@@ -20,23 +20,23 @@ const PIXEL_SIZE = 0.001
 // 文字世界字高 ≈ fontSize × 0.001 × 字形高占比；70px ≈ 旧 fontSize 0.07 的视觉档位
 const FONT_SIZE_PX = 70
 
-export type UiKitPanelButtonProps = {
+export type ToyboxTapButtonProps = {
   position?: Vector3Tuple
   /** 按钮文字（须在字体 MSDF 资产覆盖范围内，见 public/assets/fonts/uikit_cn.msdf.json） */
   label?: string
   onClick?: () => void
 }
 
-function UiKitPanelButtonInner({
+function ToyboxTapButtonInner({
   position = [0, 0, 0],
   label = '点击打开',
   onClick,
-}: UiKitPanelButtonProps) {
+}: ToyboxTapButtonProps) {
   return (
     <group position={position}>
       {/* variant=ghost：默认无背景，方便我们自己覆写为半透明白底；
           outline 自带 borderWidth=1 灰色边、不够亮；用 ghost + 自覆 borderColor/Width 更直接 */}
-      <UiKitButton
+      <Button
         variant="ghost"
         fontFamilies={FONT_FAMILIES}
         width={PANEL_SIZE_X / PIXEL_SIZE}
@@ -55,16 +55,16 @@ function UiKitPanelButtonInner({
         <Text fontSize={FONT_SIZE_PX} color="#ffffff">
           {label}
         </Text>
-      </UiKitButton>
+      </Button>
     </group>
   )
 }
 
-export default function UiKitPanelButton(props: UiKitPanelButtonProps) {
+export default function ToyboxTapButton(props: ToyboxTapButtonProps) {
   // 字体 JSON 走 fetch 异步加载，挂起时面板整块等就绪再出现（避免豆腐块闪现）
   return (
     <Suspense fallback={null}>
-      <UiKitPanelButtonInner {...props} />
+      <ToyboxTapButtonInner {...props} />
     </Suspense>
   )
 }
