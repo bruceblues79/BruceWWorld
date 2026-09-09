@@ -1,17 +1,15 @@
 import { Suspense } from 'react'
-import { Container, Text } from '@react-three/uikit'
+import { Text } from '@react-three/uikit'
 import type { Vector3Tuple } from 'three'
+import { UiKitButton } from './uikit'
 
-// uikit 面板按钮（试用 @react-three/uikit core 的实验组件）：
-// - 布局/描边/背景/hover 均由 uikit yoga 布局与条件样式驱动，无 DOM
-// - 点击走 R3F 原生事件，将来 WebXR 射线/手柄由 uikit pointer 体系接管
-// - 文字走 MSDF：useTTF 运行时转换在本仓库构建链下 worker/wasm 资产无法命中
-//   （emscripten 的 new URL('msdfgen_wasm.wasm', import.meta.url) 未被 vite emit），
-//   故改为离线预生成 MSDF JSON（msdfgen-wasm，Node 侧一次转换），运行时零 wasm。
+// uikit 面板按钮（基于官方 default kit 的 Button）：
+// - variant/size/主题颜色与 hover 走 shadcn 主题（@react-three/uikit-default）
+// - 容器尺寸、位置、走 R3F 原生事件与 pointer cursor 跟 core 一致
+// - 文字走 MSDF：MSDF JSON 离线预生成（fetcher 异步挂起），运行时零 wasm/worker
 
 // 字体资产由 scripts 流程离线生成；加字时需同步扩 TTF 子集与该 JSON（见 memory/脚本）
 const MSDF_JSON_URL = '/assets/fonts/uikit_cn.msdf.json'
-// family 名固定 default（uikit Text 未显式指定 fontFamily 时的查找键）
 const FONT_FAMILIES = { default: { normal: MSDF_JSON_URL } }
 
 // 面板世界尺寸：与原 PanelCommButton（scaleX/Y 0.4×0.2）一致
@@ -36,25 +34,28 @@ function UiKitPanelButtonInner({
 }: UiKitPanelButtonProps) {
   return (
     <group position={position}>
-      <Container
+      {/* variant=ghost：默认无背景，方便我们自己覆写为半透明白底；
+          outline 自带 borderWidth=1 灰色边、不够亮；用 ghost + 自覆 borderColor/Width 更直接 */}
+      <UiKitButton
+        variant="ghost"
         fontFamilies={FONT_FAMILIES}
-        sizeX={PANEL_SIZE_X}
-        sizeY={PANEL_SIZE_Y}
+        width={PANEL_SIZE_X / PIXEL_SIZE}
+        height={PANEL_SIZE_Y / PIXEL_SIZE}
         pixelSize={PIXEL_SIZE}
-        backgroundColor="rgba(255, 255, 255, 0.10)"
         borderColor="#ffffff"
         borderWidth={2}
+        backgroundColor="rgba(255, 255, 255, 0.10)"
         hover={{ backgroundColor: 'rgba(255, 255, 255, 0.32)' }}
-        onClick={onClick}
         cursor="pointer"
         flexDirection="column"
         alignItems="center"
         justifyContent="center"
+        onClick={onClick}
       >
         <Text fontSize={FONT_SIZE_PX} color="#ffffff">
           {label}
         </Text>
-      </Container>
+      </UiKitButton>
     </group>
   )
 }
