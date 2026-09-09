@@ -1,6 +1,6 @@
 # brucewworld · v0.0.0
 
-> Vite 8 · React 19 · TypeScript 6 · three 0.185 · @react-three/fiber 9 · @react-three/drei 10
+> Vite 8 · React 19 · TypeScript 6 · three 0.185 · @react-three/fiber 9 · @react-three/drei 10 · @react-three/uikit 1.0.76 · @react-three/uikit-default 1.0.76 · gsap 3.15
 > Node 22+ / 包管理 npm / Lint oxlint / 单端口静态站点（GitHub Pages 友好）
 
 ## 编码前先思考
