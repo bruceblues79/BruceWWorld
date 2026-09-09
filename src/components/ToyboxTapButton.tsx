@@ -44,9 +44,9 @@ function ToyboxTapButtonInner({
         pixelSize={PIXEL_SIZE}
         borderRadius={24}
         borderColor="#ffffff"
-        borderWidth={2}
+        borderWidth={4}
         backgroundColor="rgba(255, 255, 255, 0.30)"
-        hover={{ backgroundColor: 'rgba(255, 255, 255, 0.32)' }}
+        hover={{ backgroundColor: 'rgba(255, 255, 255, 0.55)' }}
         cursor="pointer"
         flexDirection="column"
         alignItems="center"
