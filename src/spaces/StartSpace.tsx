@@ -108,9 +108,7 @@ function LoadingOverlay() {
 }
 
 function StartSpace() {
-  const { isMobile, isLandscape, requestFullscreen } = useLandscapeExperience()
-  // 横屏后提示文案改为"点击进入全屏"，竖屏时仍提示"请横屏浏览"
-  const hintText = isLandscape ? '点击进入全屏体验' : '请横屏浏览'
+  const { isMobile, requestFullscreen } = useLandscapeExperience()
   // starter 场景阶段：default（待开）→ opening（开盒动画中）→ opened（闭环完成）
   const [phase, setPhase] = useState<Phase>('default')
 
@@ -181,13 +179,8 @@ function StartSpace() {
       </Canvas>
       <LoadingOverlay />
       {isMobile && (
-        <div
-          className="start-rotate-hint"
-          role="note"
-          onClick={requestFullscreen}
-          style={{ cursor: isLandscape ? 'pointer' : 'default' }}
-        >
-          {hintText}
+        <div className="start-rotate-hint" role="note" onClick={requestFullscreen}>
+          点击进入全屏体验
         </div>
       )}
     </>

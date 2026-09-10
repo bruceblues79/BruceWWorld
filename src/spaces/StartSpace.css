@@ -46,7 +46,9 @@
 
 .start-rotate-hint {
   position: fixed;
-  /* 下移到 Theme 字下方，避免与顶部主题字重叠。max() 兜底：横屏时 vh 变小仍留足间距 */
+  /* 移动端统一：同一段文案"点击进入全屏体验" + 同一位置。
+     top 避开顶部主题字（数据实测：竖屏 top=72 / 主题字底 42；横屏 top=72 / 主题字底 37）。
+     max() 兜底：横屏 vh 变小时仍留足间距 */
   top: max(10vh, 72px);
   left: 50%;
   transform: translateX(-50%);
@@ -58,4 +60,6 @@
   color: var(--ink);
   font-size: 14px;
   box-shadow: 0 4px 14px rgba(74, 47, 21, 0.18);
+  cursor: pointer;
+  pointer-events: auto;
 }
