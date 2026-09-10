@@ -4,10 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>brucewworld</title>
+    <title>大同的技术分享</title>
   </head>
   <body>
     <div id="root"></div>
+    <!-- 主题字与备案同层：HTML 解析即显示，不依赖 React/Suspense/LoadingOverlay 任何状态 -->
+    <div class="start-theme-title" aria-hidden="true">大同的技术分享</div>
+    <footer class="site-beian">
+      <a
+        href="https://beian.miit.gov.cn/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >京ICP备2026056959号-1</a
+      >
+      <a
+        href="https://beian.mps.gov.cn/#/query/webSearch?code=11010502062826"
+        target="_blank"
+        rel="noopener noreferrer"
+        >京公网安备11010502062826号</a
+      >
+    </footer>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

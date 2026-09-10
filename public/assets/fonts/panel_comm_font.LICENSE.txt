@@ -1,0 +1,9 @@
+panel_comm_font.woff
+
+Source: Noto Sans SC (SIL Open Font License 1.1), Copyright 2014-2021 Adobe, Google LLC.
+https://github.com/google/fonts/tree/main/ofl/notosanssc
+
+Processed: variable font instanced to wght=400, subset to GB2312 常用汉字(6763) +
+ASCII + CJK/全角标点等 7192 字符, woff 格式（fontTools subset）。
+
+SIL OFL 1.1 允许自由使用、再分发与嵌入；如需扩充字符集需重新子集化。

@@ -1,0 +1,81 @@
+/* Canvas 与 DOM overlays 平行（StartSpace 用 fragment 组织）；
+   overlays 用 fixed 相对视口定位，不依赖任何包裹容器 */
+
+#root canvas {
+  display: block;
+}
+
+/* Loading overlay：背景透明（body 渐变透出）、不挡用户交互（pointer-events: none）。
+   spinner 单独居中显示，让 Theme 字(z=25)与备案(z=30)在 loading 期间也持续可见 */
+.start-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  pointer-events: none;
+}
+
+.start-loading p {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+  color: var(--ink-muted);
+  text-shadow: 0 1px 6px rgba(20, 30, 50, 0.45);
+}
+
+.start-loading-spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid rgba(133, 79, 11, 0.22);
+  border-top-color: var(--accent);
+  animation: start-spin 0.9s linear infinite;
+}
+
+@keyframes start-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.start-rotate-hint {
+  position: fixed;
+  /* 移动端统一：同一段文案"点击进入全屏" + 同一位置。
+     top 避开顶部主题字（数据实测：竖屏 top=72 / 主题字底 42；横屏 top=72 / 主题字底 37）。
+     max() 兜底：横屏 vh 变小时仍留足间距 */
+  top: max(10vh, 72px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 35;
+  white-space: nowrap;
+  padding: 9px 20px;
+  border-radius: 999px;
+  background: var(--glass-strong);
+  color: var(--ink);
+  font-size: 14px;
+  box-shadow: 0 4px 14px rgba(74, 47, 21, 0.18);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* 竖屏提示：仅竖屏时显示（全屏/非全屏都有），纯引导文字，不可点击。
+   定位在"点击进入全屏"按钮上方 */
+.start-landscape-hint {
+  position: fixed;
+  top: calc(max(10vh, 72px) - 28px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 35;
+  white-space: nowrap;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  color: rgba(255, 247, 232, 0.75);
+  text-shadow: 0 1px 6px rgba(20, 30, 50, 0.5);
+  pointer-events: none;
+}
