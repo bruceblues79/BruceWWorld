@@ -7,9 +7,6 @@ import './StartSpace.css'
 
 const CAMERA_POSITION: [number, number, number] = [0, 1.6, 0]
 const LOOK_AT: [number, number, number] = [0, 0.6, -2]
-const THEME_TITLE = 'svalbard post world'
-// 备案登记的网站名称，需在首页可见（与 <title> 一致），置于主题字下方作副标题
-const SITE_NAME = '大同的技术分享'
 
 /** 程序化生成竖直渐变天空纹理：顶冷蓝 → 地平线暖 → 底暖沙 */
 function useSkyTexture(): THREE.Texture {
@@ -66,8 +63,13 @@ function isMobileDevice() {
   return MOBILE_UA.test(navigator.userAgent) || (coarse && !fine)
 }
 
-/** 移动端竖屏时提示横屏；横屏或桌面端不提示 */
-function useShowRotateHint(): boolean {
+/**
+ * 横屏体验：跟踪横竖屏状态，返回是否移动端 / 是否横屏 / 横屏时点击进入全屏的处理器。
+ * Web 平台无强制全屏 API（须用户手势），最务实方案是横屏后让用户点提示按钮触发 fullscreen。
+ * iOS Safari 仅 video 元素支持 fullscreen，documentElement.requestFullscreen 会 reject，
+ * 用 .catch(()=>{}) 静默失败即可。
+ */
+function useLandscapeExperience() {
   const [portrait, setPortrait] = useState(
     () => window.matchMedia('(orientation: portrait)').matches,
   )
@@ -77,7 +79,21 @@ function useShowRotateHint(): boolean {
     mq.addEventListener('change', update)
     return () => mq.removeEventListener('change', update)
   }, [])
-  return isMobileDevice() && portrait
+
+  const isMobile = isMobileDevice()
+  const isLandscape = isMobile && !portrait
+
+  const requestFullscreen = () => {
+    if (!isLandscape) return // 仅横屏时进入全屏；竖屏点提示无效（UI 上 cursor: default）
+    const el = document.documentElement
+    if (!document.fullscreenElement && el.requestFullscreen) {
+      el.requestFullscreen().catch(() => {
+        /* 用户拒绝或浏览器不支持（iOS Safari 等），安静失败 */
+      })
+    }
+  }
+
+  return { isMobile, isLandscape, requestFullscreen }
 }
 
 function LoadingOverlay() {
@@ -92,7 +108,9 @@ function LoadingOverlay() {
 }
 
 function StartSpace() {
-  const showRotateHint = useShowRotateHint()
+  const { isMobile, isLandscape, requestFullscreen } = useLandscapeExperience()
+  // 横屏后提示文案改为"点击进入全屏"，竖屏时仍提示"请横屏浏览"
+  const hintText = isLandscape ? '点击进入全屏体验' : '请横屏浏览'
   // starter 场景阶段：default（待开）→ opening（开盒动画中）→ opened（闭环完成）
   const [phase, setPhase] = useState<Phase>('default')
 
@@ -162,13 +180,14 @@ function StartSpace() {
         />
       </Canvas>
       <LoadingOverlay />
-      <div className="start-theme-overlay" aria-hidden="true">
-        {THEME_TITLE}
-        <span className="start-theme-subtitle">{SITE_NAME}</span>
-      </div>
-      {showRotateHint && (
-        <div className="start-rotate-hint" role="note">
-          请横屏浏览，获得最佳体验
+      {isMobile && (
+        <div
+          className="start-rotate-hint"
+          role="note"
+          onClick={requestFullscreen}
+          style={{ cursor: isLandscape ? 'pointer' : 'default' }}
+        >
+          {hintText}
         </div>
       )}
     </>

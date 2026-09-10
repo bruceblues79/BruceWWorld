@@ -5,6 +5,8 @@
   display: block;
 }
 
+/* Loading overlay：背景透明（body 渐变透出）、不挡用户交互（pointer-events: none）。
+   spinner 单独居中显示，让 Theme 字(z=25)与备案(z=30)在 loading 期间也持续可见 */
 .start-loading {
   position: fixed;
   inset: 0;
@@ -14,16 +16,8 @@
   gap: 16px;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(
-    to bottom,
-    #3a5f7e 0%,
-    #7798b8 25%,
-    #a3b8c5 45%,
-    #a8b9b9 55%,
-    #5a87a4 70%,
-    #1f4769 100%
-  );
-  color: var(--ink-muted);
+  background: transparent;
+  pointer-events: none;
 }
 
 .start-loading p {
@@ -31,6 +25,8 @@
   font-size: 15px;
   letter-spacing: 0.4em;
   text-indent: 0.4em;
+  color: var(--ink-muted);
+  text-shadow: 0 1px 6px rgba(20, 30, 50, 0.45);
 }
 
 .start-loading-spinner {
@@ -50,7 +46,8 @@
 
 .start-rotate-hint {
   position: fixed;
-  top: 14px;
+  /* 下移到 Theme 字下方，避免与顶部主题字重叠。max() 兜底：横屏时 vh 变小仍留足间距 */
+  top: max(10vh, 72px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 35;
@@ -61,34 +58,4 @@
   color: var(--ink);
   font-size: 14px;
   box-shadow: 0 4px 14px rgba(74, 47, 21, 0.18);
-}
-
-.start-theme-overlay {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 5vh;
-  z-index: 25;
-  pointer-events: none;
-  user-select: none;
-  text-align: center;
-  font-family: ui-serif, Georgia, 'Times New Roman', serif;
-  font-weight: 300;
-  font-size: clamp(18px, 2.4vw, 34px);
-  letter-spacing: 0.85em;
-  text-indent: 0.85em;
-  color: rgba(255, 247, 232, 0.36);
-  text-shadow: 0 1px 10px rgba(20, 30, 50, 0.28);
-  mix-blend-mode: screen;
-}
-
-/* 备案网站名称副标题：中文字号小一档、稍亮一档保证可辨识 */
-.start-theme-subtitle {
-  display: block;
-  margin-top: 0.9em;
-  font-family: var(--font-ui);
-  font-size: clamp(13px, 1.4vw, 18px);
-  letter-spacing: 0.5em;
-  text-indent: 0.5em;
-  color: rgba(255, 247, 232, 0.55);
 }

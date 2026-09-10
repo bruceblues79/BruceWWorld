@@ -74,3 +74,24 @@ body {
 button {
   font: inherit;
 }
+
+/* 主题字：与备案 footer 同层，HTML 解析即显示；不依赖 React/Suspense/LoadingOverlay。
+   上移接近页眉（top:1.8vh），字号比改前大 50%（14→21 基准，clamp 收尾到 27）。
+   z-index 25 位于备案(30)之下、loading(40)之下——loading 半透明后两层均透出 */
+.start-theme-title {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 1.8vh;
+  z-index: 25;
+  pointer-events: none;
+  user-select: none;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: clamp(20px, 2.1vw, 27px);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: rgba(255, 247, 232, 0.55);
+  text-shadow: 0 1px 10px rgba(20, 30, 50, 0.28);
+}
