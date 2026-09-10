@@ -40,6 +40,33 @@ body {
   );
 }
 
+/* 备案号页脚：站点外壳元素，固定在视口底部悬挂并链接工信部官网。
+   z-index 30 位于主题字(25)之上、横屏提示(35)与加载遮罩(40)之下 */
+.site-beian {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  padding: 6px 16px 10px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.site-beian a {
+  color: rgba(255, 247, 232, 0.5);
+  text-decoration: none;
+  text-shadow: 0 1px 6px rgba(12, 24, 40, 0.55);
+  pointer-events: auto;
+}
+
+.site-beian a:hover {
+  color: rgba(255, 247, 232, 0.92);
+  text-decoration: underline;
+}
+
 button {
   font: inherit;
 }

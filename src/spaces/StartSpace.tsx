@@ -8,6 +8,8 @@ import './StartSpace.css'
 const CAMERA_POSITION: [number, number, number] = [0, 1.6, 0]
 const LOOK_AT: [number, number, number] = [0, 0.6, -2]
 const THEME_TITLE = 'svalbard post world'
+// 备案登记的网站名称，需在首页可见（与 <title> 一致），置于主题字下方作副标题
+const SITE_NAME = '大同的技术分享'
 
 /** 程序化生成竖直渐变天空纹理：顶冷蓝 → 地平线暖 → 底暖沙 */
 function useSkyTexture(): THREE.Texture {
@@ -162,6 +164,7 @@ function StartSpace() {
       <LoadingOverlay />
       <div className="start-theme-overlay" aria-hidden="true">
         {THEME_TITLE}
+        <span className="start-theme-subtitle">{SITE_NAME}</span>
       </div>
       {showRotateHint && (
         <div className="start-rotate-hint" role="note">

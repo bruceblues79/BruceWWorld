@@ -81,3 +81,14 @@
   text-shadow: 0 1px 10px rgba(20, 30, 50, 0.28);
   mix-blend-mode: screen;
 }
+
+/* 备案网站名称副标题：中文字号小一档、稍亮一档保证可辨识 */
+.start-theme-subtitle {
+  display: block;
+  margin-top: 0.9em;
+  font-family: var(--font-ui);
+  font-size: clamp(13px, 1.4vw, 18px);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: rgba(255, 247, 232, 0.55);
+}
