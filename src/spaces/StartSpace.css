@@ -46,7 +46,7 @@
 
 .start-rotate-hint {
   position: fixed;
-  /* 移动端统一：同一段文案"点击进入全屏体验" + 同一位置。
+  /* 移动端统一：同一段文案"点击进入全屏" + 同一位置。
      top 避开顶部主题字（数据实测：竖屏 top=72 / 主题字底 42；横屏 top=72 / 主题字底 37）。
      max() 兜底：横屏 vh 变小时仍留足间距 */
   top: max(10vh, 72px);
@@ -62,4 +62,20 @@
   box-shadow: 0 4px 14px rgba(74, 47, 21, 0.18);
   cursor: pointer;
   pointer-events: auto;
+}
+
+/* 竖屏提示：仅竖屏时显示（全屏/非全屏都有），纯引导文字，不可点击。
+   定位在"点击进入全屏"按钮上方 */
+.start-landscape-hint {
+  position: fixed;
+  top: calc(max(10vh, 72px) - 28px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 35;
+  white-space: nowrap;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  color: rgba(255, 247, 232, 0.75);
+  text-shadow: 0 1px 6px rgba(20, 30, 50, 0.5);
+  pointer-events: none;
 }

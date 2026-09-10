@@ -24,8 +24,8 @@ npm run deploy
    ssh -o BatchMode=yes -o ConnectTimeout=15 root@111.229.101.32 'echo ok'
    ```
    必须输出 `ok`。失败见下方「排错」。
-2. **工作树干净**——先 commit，让线上产物对应一个明确 SHA。
-3. **合规内容没退化**——`index.html` 里的两个备案链接与 `<title>` 仍在。
+2. **合规内容没退化**——`index.html` 里的两个备案链接与 `<title>` 仍在。
+3. **建议（非必须）**：工作树干净时再部署，方便线上产物对应一个明确 SHA。验证性迭代部署不必等 commit。
 
 ## scripts/deploy.mjs 做了什么
 
