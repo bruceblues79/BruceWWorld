@@ -64,36 +64,78 @@ function isMobileDevice() {
 }
 
 /**
- * 横屏体验：跟踪横竖屏状态，返回是否移动端 / 是否横屏 / 横屏时点击进入全屏的处理器。
- * Web 平台无强制全屏 API（须用户手势），最务实方案是横屏后让用户点提示按钮触发 fullscreen。
- * iOS Safari 仅 video 元素支持 fullscreen，documentElement.requestFullscreen 会 reject，
- * 用 .catch(()=>{}) 静默失败即可。
+ * 横屏体验：跟踪朝向 + 全屏状态，提供"点击进入全屏"处理器。
+ *
+ * 行为契约：
+ * - 竖屏点 → 先尝试 screen.orientation.lock('landscape')（Android Chrome PWA tab 才能成功，
+ *   普通 tab/iOS Safari 会 reject，静默），再 requestFullscreen
+ * - 横屏点 → requestFullscreen；点完进入全屏，按钮自动隐藏
+ * - 任何时刻若处于全屏 + 朝向变 portrait → 自动 document.exitFullscreen()，
+ *   按钮重新出现
+ *
+ * Web 平台限制：
+ * - 无强制全屏 API（必须用户手势）；iOS Safari 仅 <video> 支持全屏，documentElement
+ *   requestFullscreen 会 reject，本 hook 用 .catch(()=>{}) 静默降级
+ * - 自动旋转屏 orientation.lock 只对安装好的 PWA 真正生效；普通 tab 多数会 reject
  */
 function useLandscapeExperience() {
+  // 朝向：portrait=true 表示当前是竖屏
   const [portrait, setPortrait] = useState(
     () => window.matchMedia('(orientation: portrait)').matches,
   )
+  // 全屏：isFullscreen=true 表示 document 处于全屏状态（按 fullscreenchange 跟踪）
+  const [isFullscreen, setIsFullscreen] = useState(
+    () => typeof document !== 'undefined' && !!document.fullscreenElement,
+  )
+
   useEffect(() => {
     const mq = window.matchMedia('(orientation: portrait)')
-    const update = () => setPortrait(mq.matches)
-    mq.addEventListener('change', update)
-    return () => mq.removeEventListener('change', update)
+    const onOrient = () => setPortrait(mq.matches)
+    mq.addEventListener('change', onOrient)
+    const onFs = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', onFs)
+    return () => {
+      mq.removeEventListener('change', onOrient)
+      document.removeEventListener('fullscreenchange', onFs)
+    }
   }, [])
 
   const isMobile = isMobileDevice()
   const isLandscape = isMobile && !portrait
 
-  const requestFullscreen = () => {
-    if (!isLandscape) return // 仅横屏时进入全屏；竖屏点提示无效（UI 上 cursor: default）
-    const el = document.documentElement
-    if (!document.fullscreenElement && el.requestFullscreen) {
-      el.requestFullscreen().catch(() => {
-        /* 用户拒绝或浏览器不支持（iOS Safari 等），安静失败 */
-      })
+  /**
+   * 离开全屏。当用户从横屏全屏转回竖屏时调用，避免视觉上方向错乱。
+   * 仅当确实处于全屏态才调，否则 exitFullscreen 在某些环境会 reject。
+   */
+  const exitFullscreenSafely = () => {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {})
     }
   }
 
-  return { isMobile, isLandscape, requestFullscreen }
+  // 自动退出逻辑：处于全屏 + 朝向变 portrait → 退出
+  // 用 effect 响应 state 变化，不在事件回调里直接 setState
+  useEffect(() => {
+    if (isFullscreen && isMobile && portrait) exitFullscreenSafely()
+  }, [isFullscreen, isMobile, portrait])
+
+  /**
+   * 点击进入全屏。可在任意朝向调用；竖屏时会先尝试锁向横屏（多数设备会 reject，无副作用）。
+   * 全屏请求必须在用户手势回调里发起，hook 已保证调用方是 onClick。
+   */
+  const requestFullscreen = () => {
+    if (!isMobile) return
+    // 尝试锁向横屏；非 PWA / iOS 会 reject，静默
+    const orient = (screen as Screen & { orientation?: ScreenOrientation }).orientation
+    if (orient && typeof orient.lock === 'function') {
+      orient.lock('landscape').catch(() => {})
+    }
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {})
+    }
+  }
+
+  return { isMobile, isLandscape, isFullscreen, requestFullscreen }
 }
 
 function LoadingOverlay() {
@@ -108,7 +150,7 @@ function LoadingOverlay() {
 }
 
 function StartSpace() {
-  const { isMobile, requestFullscreen } = useLandscapeExperience()
+  const { isMobile, isFullscreen, requestFullscreen } = useLandscapeExperience()
   // starter 场景阶段：default（待开）→ opening（开盒动画中）→ opened（闭环完成）
   const [phase, setPhase] = useState<Phase>('default')
 
@@ -178,7 +220,7 @@ function StartSpace() {
         />
       </Canvas>
       <LoadingOverlay />
-      {isMobile && (
+      {isMobile && !isFullscreen && (
         <div className="start-rotate-hint" role="note" onClick={requestFullscreen}>
           点击进入全屏体验
         </div>
