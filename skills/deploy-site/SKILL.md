@@ -74,7 +74,9 @@ ssh root@111.229.101.32 'cp /root/web-backups/nginx-default-<时间戳>.conf /et
   `mkdir -p .git/refs/heads/<父目录> && printf "%s\n" "$(git rev-parse HEAD)" > .git/refs/heads/<branch>`
   ref 已丢时，从 `.git/logs/HEAD` 末行取 SHA。ref 文件里必须是**完整 40 位 SHA**。
 - **⚠️ 不要在 `public/` 上用 `git rm`**：本环境曾出现整个 `public/` 被清空的严重事故。删单文件用 `rm <file>` + `git add -A <dir>`，删完立刻 `find public -type f` 复核；出事用 `git restore --source=HEAD --staged --worktree -- public/` 恢复。
-- 沙箱下偶发写操作被回滚，关键写操作后立刻验证。
+- **⚠️ 远端 / 提交类操作必须非沙箱前台执行**：沙箱化的命令**读不到 `C:\Users\bruce\.ssh`**（`Host key verification failed` / `hostkeys_foreach failed ... Permission denied`），而**后台任务（run_in_background）默认沙箱化** → ssh / scp / 部署脚本在后台必然失败。规则：`npm run deploy` 与所有 ssh / scp / git 提交推送**放前台并关闭沙箱**，不要丢后台。
+- **`pkill -f "<pattern>"` 会自匹配当前命令行**：命令里出现同样字符串就会把自己杀掉（退出码 255）。用括号技巧规避，例如 `pkill -9 -f "[c]ertbot renew"`。
+- 若 `certbot` 报 `Another instance of Certbot is already running`（多为被中断的任务留下），先清进程与 `/var/lib/letsencrypt/.certbot.lock`、`/var/log/letsencrypt/.certbot.lock`。
 
 ## 合规约束（不可退化）
 
