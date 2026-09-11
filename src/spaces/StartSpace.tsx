@@ -1,12 +1,10 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Environment, useProgress } from '@react-three/drei'
+import { Environment, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import Toybox, { type Phase } from './Toybox'
+import StarterSpaceCamera from '../components/StarterSpaceCamera'
 import './StartSpace.css'
-
-const CAMERA_POSITION: [number, number, number] = [0, 1.65, 0]
-const LOOK_AT: [number, number, number] = [0, 0.6, -2]
 
 /** 程序化生成竖直渐变天空纹理：顶冷蓝 → 地平线暖 → 底暖沙 */
 function useSkyTexture(): THREE.Texture {
@@ -39,20 +37,6 @@ function SceneBackground() {
   useEffect(() => () => sky.dispose(), [sky])
   return <primitive attach="background" object={sky} />
 }
-
-// 初始视距与初始俯仰角，由相机/目标位置推导，避免手写误差
-const VIEW_DISTANCE = Math.hypot(
-  CAMERA_POSITION[0] - LOOK_AT[0],
-  CAMERA_POSITION[1] - LOOK_AT[1],
-  CAMERA_POSITION[2] - LOOK_AT[2],
-)
-const POLAR_INITIAL = Math.acos(
-  (CAMERA_POSITION[1] - LOOK_AT[1]) / VIEW_DISTANCE,
-)
-// 交互约束：左右 ±45°；俯仰以当前视角为中心 ±10°；缩放视距 ±0.5；禁 pan
-const AZIMUTH_TILT = Math.PI / 4
-const POLAR_TILT = (10 * Math.PI) / 180
-const DISTANCE_TOLERANCE = 0.5
 
 const MOBILE_UA =
   /Android|webOS|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i
@@ -186,13 +170,8 @@ function StartSpace() {
       <Canvas
         shadows="percentage"
         dpr={[1, 2]}
-        camera={{
-          position: CAMERA_POSITION,
-          fov: 50,
-          near: 0.1,
-          far: 100,
-        }}
       >
+        <StarterSpaceCamera />
         <SceneBackground />
         <directionalLight
           ref={lightRef}
@@ -218,19 +197,6 @@ function StartSpace() {
           />
           <Environment files="/assets/hdr/starter_space.hdr" />
         </Suspense>
-        <OrbitControls
-          makeDefault
-          target={LOOK_AT}
-          enablePan={false}
-          enableDamping
-          dampingFactor={0.08}
-          minAzimuthAngle={-AZIMUTH_TILT}
-          maxAzimuthAngle={AZIMUTH_TILT}
-          minPolarAngle={POLAR_INITIAL - POLAR_TILT}
-          maxPolarAngle={POLAR_INITIAL + POLAR_TILT}
-          minDistance={VIEW_DISTANCE - DISTANCE_TOLERANCE}
-          maxDistance={VIEW_DISTANCE + DISTANCE_TOLERANCE}
-        />
       </Canvas>
       <LoadingOverlay />
       {isMobile && !isFullscreen && (
