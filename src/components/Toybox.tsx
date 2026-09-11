@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
 import gsap from 'gsap'
-import ToyboxTapButton from '../components/ToyboxTapButton'
+import ToyboxTapButton from './ToyboxTapButton'
 
 const MODEL_URL = '/assets/glb/toybox.glb'
 // 整个 toybox + tap 按钮的「世界锚点」

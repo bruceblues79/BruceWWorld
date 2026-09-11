@@ -2,7 +2,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Environment, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
-import Toybox, { type Phase } from './Toybox'
+import Toybox, { type Phase } from '../components/Toybox'
 import StarterSpaceCamera from '../components/StarterSpaceCamera'
 import './StartSpace.css'
 
