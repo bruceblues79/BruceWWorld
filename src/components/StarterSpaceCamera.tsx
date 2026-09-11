@@ -2,7 +2,7 @@ import { PerspectiveCamera, OrbitControls } from '@react-three/drei'
 
 // starter 场景的相机 + OrbitControls：
 // - PerspectiveCamera makeDefault 接管默认相机，直接 ref 拿实例，为后续 gsap 动画预留
-// - OrbitControls makeDefault 限制方位 ±45°、俯仰 ±10°、缩放 ±0.5，禁 pan
+// - OrbitControls makeDefault 限制俯仰 ±10°、缩放 ±0.5，禁 pan（方位不限）
 // - 几何约束常量从 CAMERA_POSITION/LOOK_AT 推导，模块级求值一次
 // - mount 顺序：PerspectiveCamera 必须先于 OrbitControls，否则 controls 拿到的
 //   state.camera 是 Canvas 默认相机而非 PerspectiveCamera（drei makeDefault 栈语义）
@@ -19,8 +19,7 @@ const VIEW_DISTANCE = Math.hypot(
 const POLAR_INITIAL = Math.acos(
   (CAMERA_POSITION[1] - LOOK_AT[1]) / VIEW_DISTANCE,
 )
-// 交互约束：左右 ±45°；俯仰以当前视角为中心 ±10°；缩放视距 ±0.5；禁 pan
-const AZIMUTH_TILT = Math.PI / 4
+// 交互约束：俯仰以当前视角为中心 ±10°；缩放视距 ±0.5；禁 pan（方位不限）
 const POLAR_TILT = (10 * Math.PI) / 180
 const DISTANCE_TOLERANCE = 0.5
 
@@ -40,8 +39,6 @@ function StarterSpaceCamera() {
         enablePan={false}
         enableDamping
         dampingFactor={0.08}
-        minAzimuthAngle={-AZIMUTH_TILT}
-        maxAzimuthAngle={AZIMUTH_TILT}
         minPolarAngle={POLAR_INITIAL - POLAR_TILT}
         maxPolarAngle={POLAR_INITIAL + POLAR_TILT}
         minDistance={VIEW_DISTANCE - DISTANCE_TOLERANCE}
