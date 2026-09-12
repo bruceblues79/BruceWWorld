@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
+import * as THREE from 'three'
 import gsap from 'gsap'
-import ToyboxTapButton from '../components/ToyboxTapButton'
+import ToyboxTapButton from './ToyboxTapButton'
 
 const MODEL_URL = '/assets/glb/toybox.glb'
 // 整个 toybox + tap 按钮的「世界锚点」
@@ -23,12 +25,32 @@ export type Phase = 'default' | 'opening' | 'opened'
 
 interface ToyboxProps {
   phase: Phase
+  /** 当前是否竖屏（来自 matchMedia 朝向）：竖屏整体缩放到 0.75，横屏为 1 */
+  portrait: boolean
   onTapStart: () => void
   onOpened: () => void
 }
 
-function Toybox({ phase, onTapStart, onOpened }: ToyboxProps) {
+function Toybox({ phase, portrait, onTapStart, onOpened }: ToyboxProps) {
   const { scene } = useGLTF(MODEL_URL)
+
+  // 整体缩放：竖屏 0.75 / 横屏 1，外层 group 以此为锚点缩放（含 tap 按钮）
+  const groupRef = useRef<THREE.Group>(null!)
+  const targetScale = portrait ? 0.75 : 1
+
+  // 挂载时直接落到目标 scale，避免加载瞬间出现 1→0.75 的缩放动画
+  useLayoutEffect(() => {
+    if (groupRef.current) groupRef.current.scale.setScalar(targetScale)
+  }, [])
+
+  // 朝向变化时从当前 scale 平滑逼近目标（帧率无关 lerp，~0.5s 收敛）
+  useFrame((_, delta) => {
+    const g = groupRef.current
+    if (!g) return
+    const t = 1 - Math.exp(-delta * 6)
+    const next = g.scale.x + (targetScale - g.scale.x) * t
+    g.scale.setScalar(next)
+  })
 
   // 开启模型阴影：给所有 mesh 打 cast/receive 标（只动 per-mesh 标志，不改材质参数）
   useEffect(() => {
@@ -73,7 +95,7 @@ function Toybox({ phase, onTapStart, onOpened }: ToyboxProps) {
   return (
     // model 与 tap 面板同处一个 group：面板用局部偏移挂在此 group 下，
     // 转动视角时面板始终保持与 toybox 的相对空间位置（真 3D，非 billboard）
-    <group position={MODEL_POSITION}>
+    <group ref={groupRef} position={MODEL_POSITION}>
       <primitive object={scene} />
       {phase === 'default' && (
         <ToyboxTapButton
