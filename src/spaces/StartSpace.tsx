@@ -48,22 +48,18 @@ function isMobileDevice() {
 }
 
 /**
- * 横屏体验：跟踪朝向 + 全屏状态，提供"点击进入全屏"处理器。
+ * 朝向 + 全屏跟踪：提供"点击进入全屏"处理器。
  *
  * 行为契约：
- * - 任意朝向点击 → requestFullscreen；进入全屏后在 fullscreenchange 回调里
- *   尝试 screen.orientation.lock('landscape')（lock 必须在文档已全屏时才生效）
- * - 全屏后按钮自动隐藏
- * - 仅"横屏全屏 → 朝向变 portrait"时自动 exitFullscreen；竖屏点击进入全屏
- *   不会立即退出（给 orientation.lock 留时间生效）
+ * - 任意朝向点击 → requestFullscreen；不再尝试锁向横屏（移除 screen.orientation.lock）
+ * - 全屏后按钮自动隐藏；朝向变化不自动退出全屏，由用户自行旋转
  *
  * Web 平台限制：
  * - 无强制全屏 API（必须用户手势）；iOS Safari 仅 <video> 支持全屏，documentElement
  *   requestFullscreen 会 reject，本 hook 用 .catch(()=>{}) 静默降级
- * - orientation.lock 只对安装好的 PWA 真正生效；普通 tab 多数会 reject
  */
 function useLandscapeExperience() {
-  // 朝向：portrait=true 表示当前是竖屏
+  // 朝向：portrait=true 表示当前是竖屏（供 toybox 横竖屏缩放使用）
   const [portrait, setPortrait] = useState(
     () => window.matchMedia('(orientation: portrait)').matches,
   )
@@ -71,26 +67,12 @@ function useLandscapeExperience() {
   const [isFullscreen, setIsFullscreen] = useState(
     () => typeof document !== 'undefined' && !!document.fullscreenElement,
   )
-  // 记录全屏期间是否曾处于横屏；仅"横屏全屏 → 转竖屏"时自动退出
-  const wasLandscapeInFs = useRef(false)
 
   useEffect(() => {
     const mq = window.matchMedia('(orientation: portrait)')
     const onOrient = () => setPortrait(mq.matches)
     mq.addEventListener('change', onOrient)
-    const onFs = () => {
-      const fs = !!document.fullscreenElement
-      setIsFullscreen(fs)
-      if (fs) {
-        // 进入全屏后记录朝向，再尝试锁向横屏
-        // screen.orientation.lock 要求文档处于全屏态才生效
-        wasLandscapeInFs.current = !mq.matches
-        const orient = (screen as Screen & { orientation?: ScreenOrientation }).orientation
-        if (orient && typeof orient.lock === 'function') {
-          orient.lock('landscape').catch(() => {})
-        }
-      }
-    }
+    const onFs = () => setIsFullscreen(!!document.fullscreenElement)
     document.addEventListener('fullscreenchange', onFs)
     return () => {
       mq.removeEventListener('change', onOrient)
@@ -99,31 +81,9 @@ function useLandscapeExperience() {
   }, [])
 
   const isMobile = isMobileDevice()
-  const isLandscape = isMobile && !portrait
 
   /**
-   * 离开全屏。当用户从横屏全屏转回竖屏时调用。
-   */
-  const exitFullscreenSafely = () => {
-    if (document.fullscreenElement && document.exitFullscreen) {
-      document.exitFullscreen().catch(() => {})
-    }
-  }
-
-  // 横屏全屏期间持续更新标记，使后续竖屏变化能触发自动退出
-  useEffect(() => {
-    if (isFullscreen && !portrait) wasLandscapeInFs.current = true
-  }, [isFullscreen, portrait])
-
-  // 自动退出：仅当曾处于横屏全屏 → 朝向变 portrait 时
-  useEffect(() => {
-    if (isFullscreen && isMobile && portrait && wasLandscapeInFs.current) {
-      exitFullscreenSafely()
-    }
-  }, [isFullscreen, isMobile, portrait])
-
-  /**
-   * 点击进入全屏。锁向横屏的逻辑在 fullscreenchange 回调中执行（须先进入全屏态）。
+   * 点击进入全屏。仅进入全屏态，不锁向横屏。
    */
   const requestFullscreen = () => {
     if (!isMobile) return
@@ -132,7 +92,7 @@ function useLandscapeExperience() {
     }
   }
 
-  return { isMobile, isLandscape, isFullscreen, portrait, requestFullscreen }
+  return { isMobile, isFullscreen, portrait, requestFullscreen }
 }
 
 function LoadingOverlay() {
@@ -192,6 +152,7 @@ function StartSpace() {
         <Suspense fallback={null}>
           <Toybox
             phase={phase}
+            portrait={portrait}
             onTapStart={() => setPhase('opening')}
             onOpened={() => setPhase('opened')}
           />
@@ -202,11 +163,6 @@ function StartSpace() {
       {isMobile && !isFullscreen && (
         <div className="start-rotate-hint" role="note" onClick={requestFullscreen}>
           点击进入全屏
-        </div>
-      )}
-      {isMobile && portrait && (
-        <div className="start-landscape-hint" role="note">
-          建议横屏浏览
         </div>
       )}
     </>
