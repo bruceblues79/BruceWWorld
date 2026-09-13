@@ -3,6 +3,10 @@
 
 #root canvas {
   display: block;
+  /* 干掉 iOS 长按呼出的 copy/look-up 菜单，防止文本选择高亮 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Loading overlay：背景透明（body 渐变透出）、不挡用户交互（pointer-events: none）。

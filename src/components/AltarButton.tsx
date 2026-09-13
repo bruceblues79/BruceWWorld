@@ -67,6 +67,10 @@ function AltarButtonInner({ position, imageSrc, onClick }: AltarButtonProps) {
             paddingRight={0}
             cursor={clickable ? 'pointer' : 'default'}
             onClick={clickable ? onClick : undefined}
+            onPointerDown={(e) => {
+              // 阻止浏览器长按手势判定（callout 菜单/全屏闪），不影响 uikit 内部 click 合成
+              ;(e.nativeEvent as PointerEvent).preventDefault()
+            }}
             flexDirection="column"
             alignItems="center"
             justifyContent="center"
