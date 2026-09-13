@@ -23,14 +23,18 @@ import type { Vector3Tuple } from 'three'
 // 背景色/边框/圆角/flexDirection 主题默认值，减少易遗漏的属性）。
 // 注意：Container / Card / Button / CardFooter 在源码层面同源同校验（均
 // hasNonUikitChildren: false），但本版本（@react-three/uikit@1.0.76）实测
-// 裸 Container 在非 Fullscreen/Root 上下文的 3D 场景中无法正确创建 panel mesh
-// （2026-09-13 实测：AltarScreen 改用裸 Container 替代 Card 后整棵 Canvas 子树
-// 崩溃，仅 DOM 外层 sibling「标题/备案号」仍可见）。Card 通过 uikit-default 的
-// build() 包装路径会触发 panel mesh 正确创建——经验结论优先于源码静态分析，
-// 3D 世界坐标场景的面板与子分区一律走 Card / CardContent / CardFooter 路径。
-// 同样地，直接塞 R3F group/mesh 或 drei Billboard 进 UIKit 容器会抛
-// "Only pmndrs/uikit components can be added as children..." 异常，导致 Canvas
-// 子树崩溃——普通 Three.js 节点须放在 UIKit 根节点外层（本组件即
+// 裸 Container 在 3D 世界坐标场景无法渲染 panel mesh（不可见）：
+//   - 2026-09-13 A/B 对照：同位置同属性 Card 红块可见、Container 不可见
+//   - Card 通过 uikit-default 的 build(VanillaCard, "VanillaDefaultCard") 包装
+//     路径触发 panel mesh 正确创建，裸 Container 的 build(VanillaContainer)
+//     在 3D 世界坐标场景 panel mesh 不可见
+//   - 另：Container 嵌套 Container + gsap scale 在 isRenderless Container 上的
+//     组合会导致整棵 Canvas 子树崩溃（曾导致「场景全没、DOM 还在」故障）
+// 源码静态分析 ≠ 运行时行为——经验结论优先，3D 世界坐标场景的面板与子分区
+// 一律走 Card / CardContent / CardFooter 路径。同样地，直接塞 R3F group/mesh
+// 或 drei Billboard 进 UIKit 容器会抛 "Only pmndrs/uikit components can be
+// added as children..." 异常，导致 Canvas 子树崩溃——普通 Three.js 节点须
+// 放在 UIKit 根节点外层（本组件即
 // <group><Billboard><Card>...</Card></Billboard></group>）。
 //
 // 尺寸换算：1px = 0.001 世界单位（与 AltarButton/ToyboxTapButton 一致），0.6m → 600px。
