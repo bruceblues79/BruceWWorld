@@ -19,45 +19,6 @@
   touch-action: none;
 }
 
-/* Loading overlay：背景透明（body 渐变透出）、不挡用户交互（pointer-events: none）。
-   spinner 单独居中显示，让 Theme 字(z=25)与备案(z=30)在 loading 期间也持续可见 */
-.start-loading {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  pointer-events: none;
-}
-
-.start-loading p {
-  margin: 0;
-  font-size: 15px;
-  letter-spacing: 0.4em;
-  text-indent: 0.4em;
-  color: var(--ink-muted);
-  text-shadow: 0 1px 6px rgba(20, 30, 50, 0.45);
-}
-
-.start-loading-spinner {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 3px solid rgba(133, 79, 11, 0.22);
-  border-top-color: var(--accent);
-  animation: start-spin 0.9s linear infinite;
-}
-
-@keyframes start-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .start-rotate-hint {
   position: fixed;
   /* 移动端"点击进入全屏"按钮。

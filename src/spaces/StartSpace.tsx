@@ -96,17 +96,6 @@ function useLandscapeExperience() {
   return { isMobile, isFullscreen, portrait, requestFullscreen }
 }
 
-function LoadingOverlay() {
-  const { active } = useProgress()
-  if (!active) return null
-  return (
-    <div className="start-loading" role="status" aria-live="polite">
-      <span className="start-loading-spinner" aria-hidden="true" />
-      <p>loading</p>
-    </div>
-  )
-}
-
 function StartSpace() {
   const { isMobile, isFullscreen, portrait, requestFullscreen } = useLandscapeExperience()
   // starter 场景阶段：default（待开）→ opening（开盒动画中）→ opened（闭环完成）
@@ -117,6 +106,15 @@ function StartSpace() {
   // 三个 AltarButton 的显隐：开 AltarScreen 时隐藏，关闭时重新显示。
   // 隐藏走条件渲染（卸载），重新显示时重播 AltarButton 弹出动画。
   const [showAltarButtons, setShowAltarButtons] = useState(true)
+
+  // 资源加载进度：GLB/HDR 等 Suspense 资源加载完成后，移除 index.html 里的初始加载层。
+  // useProgress 基于 THREE.DefaultLoadingManager，可在 Canvas 外调用。
+  const { active } = useProgress()
+  useEffect(() => {
+    if (!active) {
+      document.getElementById('initial-loading')?.remove()
+    }
+  }, [active])
 
   const openAltarScreen = () => {
     setShowAltarScr(true)
@@ -181,7 +179,6 @@ function StartSpace() {
       {/* 主题字：仅 StartSpace（首页）显示，其他平行 space 不渲染。
           fixed 定位 + z-index 25，位于备案(30)之下、loading(40)之下 */}
       <div className="start-theme-title" aria-hidden="true">大同的技术分享</div>
-      <LoadingOverlay />
       {isMobile && !isFullscreen && (
         <div className="start-rotate-hint" role="note" onClick={requestFullscreen}>
           点击进入全屏

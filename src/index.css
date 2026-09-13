@@ -74,3 +74,54 @@ body {
 button {
   font: inherit;
 }
+
+/* 初始加载层：与备案同层（HTML 解析即渲染），React bundle 加载前即显示。
+   居中两行字：标题 + 加载中。资源加载完成后由 StartSpace 移除。
+   z-index 50 最高层，pointer-events: none 不挡交互 */
+#initial-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.initial-loading-title {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: clamp(18px, 2.6vw, 30px);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: rgba(255, 247, 232, 0.88);
+  text-shadow: 0 1px 10px rgba(20, 30, 50, 0.28);
+}
+
+.initial-loading-text {
+  font-size: 14px;
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+  color: rgba(255, 247, 232, 0.55);
+  text-shadow: 0 1px 6px rgba(20, 30, 50, 0.4);
+}
+
+/* 加载中后面的省略号动画：三个点依次出现 */
+.initial-loading-dots::after {
+  content: '';
+  display: inline-block;
+  width: 2.4em;
+  text-align: left;
+  animation: initial-dots 1.4s steps(4, end) infinite;
+}
+
+@keyframes initial-dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: ''; }
+}

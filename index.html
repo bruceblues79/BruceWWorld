@@ -8,6 +8,12 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- 初始加载层：React bundle 下载执行前即显示，资源加载完成后由 StartSpace 移除。
+         与备案同层（HTML 解析即渲染），确保白屏阶段有反馈 -->
+    <div id="initial-loading" aria-live="polite">
+      <div class="initial-loading-title">大同的技术分享</div>
+      <div class="initial-loading-text">加载中<span class="initial-loading-dots"></span></div>
+    </div>
     <!-- 备案号：站点级全局悬挂，所有 space 共享。主题字下沉到 StartSpace 内按需渲染 -->
     <footer class="site-beian">
       <a
