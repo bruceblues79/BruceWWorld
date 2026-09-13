@@ -24,11 +24,13 @@ html,
 body,
 #root {
   height: 100%;
+  overscroll-behavior: none;
 }
 
 body {
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: none;
   background: linear-gradient(
     to bottom,
     #3a5f7e 0%,

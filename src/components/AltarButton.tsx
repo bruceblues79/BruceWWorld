@@ -58,6 +58,7 @@ function AltarButtonInner({ position, imageSrc, onClick }: AltarButtonProps) {
             borderRadius={8}
             backgroundColor="rgba(255, 255, 255, 0.2)"
             depthWrite={false}
+            renderOrder={10}
             paddingTop={0}
             paddingBottom={0}
             paddingLeft={0}
