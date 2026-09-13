@@ -43,6 +43,10 @@ interface ToyboxProps {
   phase: Phase
   /** 当前是否竖屏（来自 matchMedia 朝向）：竖屏整体缩放到 0.75，横屏为 1 */
   portrait: boolean
+  /** 开盒后三个 AltarButton 是否渲染（开 AltarScreen 时隐藏，关闭时重显） */
+  showAltarButtons: boolean
+  /** 点按任意 AltarButton 时触发（StartSpace 据此打开 AltarScreen 并隐藏按钮） */
+  onAltarButtonClick: () => void
   onTapStart: () => void
   onOpened: () => void
 }
@@ -50,6 +54,8 @@ interface ToyboxProps {
 function Toybox({
   phase,
   portrait,
+  showAltarButtons,
+  onAltarButtonClick,
   onTapStart,
   onOpened,
 }: ToyboxProps) {
@@ -147,7 +153,7 @@ function Toybox({
           onClick={onTapStart}
         />
       )}
-      {phase === 'opened' &&
+      {phase === 'opened' && showAltarButtons &&
         ALTAR_NODES.map(({ name, image }) => {
           const pos = altarPositions[name]
           if (!pos) return null
@@ -156,7 +162,7 @@ function Toybox({
               key={name}
               position={pos}
               imageSrc={image}
-              onClick={() => {}}
+              onClick={onAltarButtonClick}
             />
           )
         })}
