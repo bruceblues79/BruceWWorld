@@ -31,10 +31,11 @@ npm run deploy
 
 1. `tar` 打包 `dist/` → ssh 传到服务器 `/tmp/bww-stage`
 2. **远端校验**：`index.html` 含 `beian.miit.gov.cn` 与 `beian.mps.gov.cn`；`assets/glb/toybox.glb`、`assets/hdr/starter_space.hdr` 存在
-3. **备份现场**：`tar -czf /root/web-backups/html-<时间戳>.tar.gz -C /var/www/html .`
-4. `rm -rf /var/www/html/assets` 后整目录覆盖（所以本地删掉的资源会同步消失）
-5. `chown -R root:root` + `chmod -R a+rX`
-6. 清暂存区 → 外网 `fetch https://svalbardpost.xyz/` 校验
+3. `rm -rf /var/www/html/assets` 后整目录覆盖（所以本地删掉的资源会同步消失）
+4. `chown -R root:root` + `chmod -R a+rX`
+5. 清暂存区 → 外网 `fetch https://svalbardpost.xyz/` 校验
+
+版本由 git 管理，不做服务器端备份。回滚：`git checkout` 上一版后重新 `npm run deploy`。
 
 ## 服务器事实（已侦察确认）
 
@@ -44,7 +45,7 @@ npm run deploy
 | 站点根目录 | `/var/www/html` |
 | nginx 站点配置 | `/etc/nginx/sites-enabled/default`（80 块 301 跳 HTTPS；443 块服务静态站） |
 | 证书 | `/etc/letsencrypt/live/svalbardpost.xyz/`，certbot `authenticator=nginx` 自动续期 |
-| 备份目录 | `/root/web-backups/`（`html-*.tar.gz` 站点快照、`nginx-default-*.conf` 配置快照） |
+| 备份目录 | 无（版本由 git 管理） |
 
 ## 部署后校验
 
@@ -56,14 +57,7 @@ curl -s  --noproxy '*' -m 20 https://svalbardpost.xyz/ | grep -oE '京ICP备[^<]
 
 ## 回滚
 
-```bash
-# 看有哪些快照
-ssh root@111.229.101.32 'ls -lt /root/web-backups/ | head'
-# 站点回滚
-ssh root@111.229.101.32 'tar -xzf /root/web-backups/html-<时间戳>.tar.gz -C /var/www/html && chown -R root:root /var/www/html'
-# nginx 配置回滚
-ssh root@111.229.101.32 'cp /root/web-backups/nginx-default-<时间戳>.conf /etc/nginx/sites-enabled/default && nginx -t && systemctl reload nginx'
-```
+版本由 git 管理，回滚即 `git checkout` 上一版后重新 `npm run deploy`。
 
 ## 排错
 
@@ -77,6 +71,8 @@ ssh root@111.229.101.32 'cp /root/web-backups/nginx-default-<时间戳>.conf /et
 - **⚠️ 远端 / 提交类操作必须非沙箱前台执行**：沙箱化的命令**读不到 `C:\Users\bruce\.ssh`**（`Host key verification failed` / `hostkeys_foreach failed ... Permission denied`），而**后台任务（run_in_background）默认沙箱化** → ssh / scp / 部署脚本在后台必然失败。规则：`npm run deploy` 与所有 ssh / scp / git 提交推送**放前台并关闭沙箱**，不要丢后台。
 - **`pkill -f "<pattern>"` 会自匹配当前命令行**：命令里出现同样字符串就会把自己杀掉（退出码 255）。用括号技巧规避，例如 `pkill -9 -f "[c]ertbot renew"`。
 - 若 `certbot` 报 `Another instance of Certbot is already running`（多为被中断的任务留下），先清进程与 `/var/lib/letsencrypt/.certbot.lock`、`/var/log/letsencrypt/.certbot.lock`。
+- **Windows 本机 SSH 必须带 `-4`**：本机网络 IPv6 不通到 `111.229.101.32`，默认解析优先 IPv6 会超时（`Connection timed out`）。所有预检/回滚命令里的 `ssh root@111.229.101.32` 改写成 `ssh -4 -o ConnectTimeout=20 root@111.229.101.32`。`npm run deploy` 跑的 ssh/scp 由 node 子进程发起也受同一规则约束——脚本内已带 `-o ConnectTimeout`，但需确认走 IPv4，必要时在 `~/.ssh/config` 给 `111.229.101.32` 加 `AddressFamily inet`。注意：Trae Work 远程 Linux 环境无此问题，IPv4 直连即可。
+- **Windows PowerShell `curl` 别名到 `Invoke-WebRequest`**：`curl -m` / `curl -s` 会因参数歧义报 `AmbiguousParameter`。部署后校验一律改用 `curl.exe` 显式调用真 curl，例如 `curl.exe -sI --noproxy '*' --max-time 20 https://svalbardpost.xyz/`。
 
 ## 合规约束（不可退化）
 

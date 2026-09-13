@@ -12,8 +12,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "public/assets/fonts/panel_comm_font.woff"
 OUT = ROOT / "public/assets/fonts/uikit_cn.ttf"
 
-# 「点击打开」 + ASCII 0x20..0x7E + 全角空格与常用全角标点
-CHARS = "点击打开"
+# 「点击打开」 + 「上一页下返回」 + ASCII 0x20..0x7E + 全角空格与常用全角标点
+CHARS = "点击打开上一页下返回"
 CHARS += "".join(chr(c) for c in range(0x20, 0x7F))
 CHARS += "\u3000，。！？：；（）《》“”‘’…—·、"
 CHARS = "".join(dict.fromkeys(CHARS))
@@ -36,7 +36,7 @@ def main() -> None:
     from fontTools.ttLib import TTFont
 
     cmap = TTFont(str(OUT)).getBestCmap()
-    missing = [ch for ch in "点击打开" if ord(ch) not in cmap]
+    missing = [ch for ch in "点击打开上一页下返回" if ord(ch) not in cmap]
     print(f"chars={len(CHARS)} missing={missing or 'none'}")
     print(f"OK -> {OUT}")
 

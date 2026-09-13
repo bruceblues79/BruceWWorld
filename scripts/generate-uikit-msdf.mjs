@@ -28,7 +28,7 @@ const RANGE = 4 // MSDF 距离场范围（px）
 const PADDING = 2
 
 // 必须与 TTF 子集字符集一致，且涵盖所有 UI 文案字符
-const CHAR = '点击打开 '
+const CHAR = '点击打开上一页下返回 '
 
 const round = (x) => Math.round(x * 100) / 100
 

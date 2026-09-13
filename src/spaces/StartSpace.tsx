@@ -4,6 +4,7 @@ import { Environment, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import Toybox, { type Phase } from '../components/Toybox'
 import StarterSpaceCamera from '../components/StarterSpaceCamera'
+import AltarScreen from '../components/AltarScreen'
 import './StartSpace.css'
 
 /** 程序化生成竖直渐变天空纹理：顶冷蓝 → 地平线暖 → 底暖沙 */
@@ -110,6 +111,21 @@ function StartSpace() {
   const { isMobile, isFullscreen, portrait, requestFullscreen } = useLandscapeExperience()
   // starter 场景阶段：default（待开）→ opening（开盒动画中）→ opened（闭环完成）
   const [phase, setPhase] = useState<Phase>('default')
+  // AltarScreen 显隐：点按任意 AltarButton 弹出（带 0.8→1 缩放动画），
+  // 点击「返回」按钮即时关闭。默认不可见。
+  const [showAltarScr, setShowAltarScr] = useState(false)
+  // 三个 AltarButton 的显隐：开 AltarScreen 时隐藏，关闭时重新显示。
+  // 隐藏走条件渲染（卸载），重新显示时重播 AltarButton 弹出动画。
+  const [showAltarButtons, setShowAltarButtons] = useState(true)
+
+  const openAltarScreen = () => {
+    setShowAltarScr(true)
+    setShowAltarButtons(false)
+  }
+  const closeAltarScreen = () => {
+    setShowAltarScr(false)
+    setShowAltarButtons(true)
+  }
 
   // 把方向光的 shadow 投影焦点拉到 toybox 中心 —— 默认 target=(0,0,0) 会让 frustum
   // 对偏在 z=-2 的模型取样失真、阴影看上去"飘"到远处。
@@ -149,10 +165,13 @@ function StartSpace() {
           shadow-bias={-0.0001}
           shadow-normalBias={0.005}
         />
+        <AltarScreen position={[0, 1, -1.75]} visible={showAltarScr} onClose={closeAltarScreen} />
         <Suspense fallback={null}>
           <Toybox
             phase={phase}
             portrait={portrait}
+            showAltarButtons={showAltarButtons}
+            onAltarButtonClick={openAltarScreen}
             onTapStart={() => setPhase('opening')}
             onOpened={() => setPhase('opened')}
           />
@@ -164,6 +183,11 @@ function StartSpace() {
         <div className="start-rotate-hint" role="note" onClick={requestFullscreen}>
           点击进入全屏
         </div>
+      )}
+      {isMobile && portrait && (
+        <p className="start-landscape-hint" role="note">
+          建议横屏
+        </p>
       )}
     </>
   )
