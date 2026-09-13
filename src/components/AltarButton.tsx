@@ -28,6 +28,7 @@ function AltarButtonInner({ position, imageSrc, onClick }: AltarButtonProps) {
   // 内层 group 承载 scale 弹出动画（外层 Billboard 只负责旋转，不缩放）
   const scaleRef = useRef<THREE.Group>(null)
   const [clickable, setClickable] = useState(false)
+  const [pressed, setPressed] = useState(false)
 
   useEffect(() => {
     const g = scaleRef.current
@@ -49,7 +50,7 @@ function AltarButtonInner({ position, imageSrc, onClick }: AltarButtonProps) {
   return (
     <group position={position}>
       <Billboard>
-        <group ref={scaleRef}>
+        <group ref={scaleRef} scale={pressed ? 0.95 : 1}>
           <Button
             variant="ghost"
             width={BUTTON_SIZE / PIXEL_SIZE}
@@ -67,6 +68,10 @@ function AltarButtonInner({ position, imageSrc, onClick }: AltarButtonProps) {
             paddingRight={0}
             cursor={clickable ? 'pointer' : 'default'}
             onClick={clickable ? onClick : undefined}
+            onPointerDown={clickable ? () => setPressed(true) : undefined}
+            onPointerUp={() => setPressed(false)}
+            onPointerLeave={() => setPressed(false)}
+            onPointerCancel={() => setPressed(false)}
             flexDirection="column"
             alignItems="center"
             justifyContent="center"
