@@ -19,12 +19,16 @@ import type { Vector3Tuple } from 'three'
 // 内含 4 个横向排列的正方按钮（无文字 + 图标）：上一页 / 下一页 / 确定 / 返回。
 // 当前仅「返回」实装：调用 onClose 关闭面板并重新显示 AltarButton（无动画）。
 //
-// 用 uikit-default 的 Card（官方默认面板，继承 Container 并预设背景/圆角/边框），
-// 与 AltarButton/ToyboxTapButton 的 Button 同套 defaultOverrides 渲染路径。
-// 注意：本版本 uikit 的裸 Container 需要配合 Fullscreen（走 Root 上下文）才能渲染，
-// 不适用于 3D 场景中的局部世界坐标面板；默认面板一律用 Card 当底。
-// 上下分区同样用 uikit-default 的 CardContent / CardFooter（与 Card 同套 build()
-// 包装路径，会正确触发 panel mesh 创建），不要用裸 Container 当子元素。
+// 用 uikit-default 的 Card（继承 Container 并通过 defaultOverrides 预设
+// 背景色/边框/圆角/flexDirection 主题默认值，减少易遗漏的属性）。
+// 注意：Container / Card / Button / CardFooter 同源同校验——均 hasNonUikitChildren: false，
+// 直接塞 R3F group/mesh 或 drei Billboard 会抛 "Only pmndrs/uikit components can be
+// added as children..." 异常，导致 Canvas 子树崩溃（Canvas 外 DOM sibling 仍可见，
+// 即"场景全没、标题/备案号还在"现象）。普通 Three.js 节点须放在 UIKit 根节点外层
+// （本组件即 <group><Billboard><Card>...</Card></Billboard></group>）。
+// 因此默认面板优先用 Card 当底，子分区用 CardContent / CardFooter——它们同属
+// uikit-default，与 Card 同套 build() 包装路径；并不是因为裸 Container 不能渲染。
+// Fullscreen 仅用于屏幕空间 HUD（挂相机、按 FOV 自动算 pixelSize），非本组件前提。
 //
 // 尺寸换算：1px = 0.001 世界单位（与 AltarButton/ToyboxTapButton 一致），0.6m → 600px。
 // 透明度走 rgba 字符串（与现有 Button 一致；本版本 uikit 无独立 backgroundOpacity prop）。
@@ -217,8 +221,8 @@ function AltarScreenInner({
             paddingRight={0}
           >
             {/* 信息区（上 4/5，暂空，后续填内容）。
-                用 CardContent（uikit-default，与 Card 同套 build() 路径），
-                不要用裸 Container（需 Fullscreen 上下文才能渲染 panel mesh） */}
+                用 CardContent（uikit-default，与 Card 同套 build() 路径，
+                自带 flexDirection=column 主题默认值，减少易遗漏的属性） */}
             <CardContent
               height={PANEL_HEIGHT - OP_ROW_HEIGHT}
               paddingTop={0}
