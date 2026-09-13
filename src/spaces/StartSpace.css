@@ -39,7 +39,7 @@
   pointer-events: auto;
 }
 
-/* 移动端竖屏"建议横屏"极小字提示：
+/* 移动端竖屏"可横屏"极小字提示：
    - 仅 isMobile && portrait 显示，与全屏状态无关（横屏转竖屏会再出现）
    - 极不显眼：极小字号 + 低对比 + 无背景，纯提示不抢前
    - pointer-events: none 不挡 canvas 点击 */

@@ -186,7 +186,7 @@ function StartSpace() {
       )}
       {isMobile && portrait && (
         <p className="start-landscape-hint" role="note">
-          建议横屏
+          可横屏
         </p>
       )}
     </>
