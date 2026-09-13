@@ -21,14 +21,17 @@ import type { Vector3Tuple } from 'three'
 //
 // 用 uikit-default 的 Card（继承 Container 并通过 defaultOverrides 预设
 // 背景色/边框/圆角/flexDirection 主题默认值，减少易遗漏的属性）。
-// 注意：Container / Card / Button / CardFooter 同源同校验——均 hasNonUikitChildren: false，
-// 直接塞 R3F group/mesh 或 drei Billboard 会抛 "Only pmndrs/uikit components can be
-// added as children..." 异常，导致 Canvas 子树崩溃（Canvas 外 DOM sibling 仍可见，
-// 即"场景全没、标题/备案号还在"现象）。普通 Three.js 节点须放在 UIKit 根节点外层
-// （本组件即 <group><Billboard><Card>...</Card></Billboard></group>）。
-// 因此默认面板优先用 Card 当底，子分区用 CardContent / CardFooter——它们同属
-// uikit-default，与 Card 同套 build() 包装路径；并不是因为裸 Container 不能渲染。
-// Fullscreen 仅用于屏幕空间 HUD（挂相机、按 FOV 自动算 pixelSize），非本组件前提。
+// 注意：Container / Card / Button / CardFooter 在源码层面同源同校验（均
+// hasNonUikitChildren: false），但本版本（@react-three/uikit@1.0.76）实测
+// 裸 Container 在非 Fullscreen/Root 上下文的 3D 场景中无法正确创建 panel mesh
+// （2026-09-13 实测：AltarScreen 改用裸 Container 替代 Card 后整棵 Canvas 子树
+// 崩溃，仅 DOM 外层 sibling「标题/备案号」仍可见）。Card 通过 uikit-default 的
+// build() 包装路径会触发 panel mesh 正确创建——经验结论优先于源码静态分析，
+// 3D 世界坐标场景的面板与子分区一律走 Card / CardContent / CardFooter 路径。
+// 同样地，直接塞 R3F group/mesh 或 drei Billboard 进 UIKit 容器会抛
+// "Only pmndrs/uikit components can be added as children..." 异常，导致 Canvas
+// 子树崩溃——普通 Three.js 节点须放在 UIKit 根节点外层（本组件即
+// <group><Billboard><Card>...</Card></Billboard></group>）。
 //
 // 尺寸换算：1px = 0.001 世界单位（与 AltarButton/ToyboxTapButton 一致），0.6m → 600px。
 // 透明度走 rgba 字符串（与现有 Button 一致；本版本 uikit 无独立 backgroundOpacity prop）。
