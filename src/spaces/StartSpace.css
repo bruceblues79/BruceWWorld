@@ -9,6 +9,16 @@
   user-select: none;
 }
 
+/* 全局压制移动端长按默认行为（应用到所有元素兜底，确保命中真正的 touch target）：
+   - tap-highlight: 移除点击/长按时浏览器的蓝色高亮闪烁
+   - touch-action: none 阻止浏览器长按手势识别——超过系统阈值会派发 pointercancel
+     抢断 pointerup，导致长按松开后 click 不触发；本站 canvas 全屏占满视口，
+     原生滚动/缩放手势本就不需要，故全局禁用 */
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
 /* Loading overlay：背景透明（body 渐变透出）、不挡用户交互（pointer-events: none）。
    spinner 单独居中显示，让 Theme 字(z=25)与备案(z=30)在 loading 期间也持续可见 */
 .start-loading {

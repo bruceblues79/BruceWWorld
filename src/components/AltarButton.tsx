@@ -11,8 +11,10 @@ import type { Vector3Tuple } from 'three'
 // - 无文字，白底 0.2 透明度 + 对应 PNG 图标
 // - 外层 drei Billboard 始终朝向相机
 // - 挂载时 scale 0 → 1 的 0.5s 弹出动画（easeIn），动画完成后方可点击
-// - 按压反馈：直接 ref 操作 scale 0.95，绕过 React state 批处理
-// - 可配置长按阈值 longPressMs，到时触发 onLongPress 并抑制 onClick
+// - 按压反馈：动画完成后 pointerDown 时 scale 0.95，up/leave/cancel 回 1，无过渡
+// - click 在 pointerup 时自触发：移动端长按后浏览器不合成 click 事件，
+//   R3F onClick 拿不到；故用 pointerDownOnButton ref 跟踪 down 是否在本按钮，
+//   up 时若仍在按钮上则触发 onClick，不依赖浏览器 click 派发
 // - 尺寸 0.2 × 0.2 世界单位
 //
 // 纹理走 R3F useLoader 缓存：与 Toybox 模块加载时的 useLoader.preload 同源，
@@ -22,6 +24,7 @@ const BUTTON_SIZE = 0.2
 // px → 世界单位换算率：1px = 0.001 世界单位（与 ToyboxTapButton 一致）
 const PIXEL_SIZE = 0.001
 const POP_DURATION = 0.5
+// 按压时的缩放（直接 ref 操作，无过渡动画；仅在弹出动画完成后生效）
 const PRESS_SCALE = 0.95
 
 export type AltarButtonProps = {
@@ -29,17 +32,12 @@ export type AltarButtonProps = {
   /** 图标纹理 URL，如 /assets/textures/altar_heart.png */
   imageSrc: string
   onClick?: () => void
-  /** 长按阈值（ms），达到后触发 onLongPress 并抑制 onClick，默认 500 */
-  longPressMs?: number
-  onLongPress?: () => void
 }
 
 function AltarButtonInner({
   position,
   imageSrc,
   onClick,
-  longPressMs = 500,
-  onLongPress,
 }: AltarButtonProps) {
   // 走 R3F 缓存取纹理（已由 Toybox 模块加载时 preload 预热）；
   // colorSpace / matrixAutoUpdate 与 uikit 内部 loadTextureImpl 保持一致，
@@ -50,11 +48,11 @@ function AltarButtonInner({
   // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
   texture.matrixAutoUpdate = false
 
-  // 内层 group 承载 scale 弹出动画 + 按压反馈（外层 Billboard 只负责旋转，不缩放）
+  // 内层 group 承载 scale 弹出动画（外层 Billboard 只负责旋转，不缩放）
   const scaleRef = useRef<THREE.Group>(null)
   const [clickable, setClickable] = useState(false)
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const longPressFired = useRef(false)
+  // 跟踪 pointerdown 是否发生在本按钮：仅当 down→up 同在本按钮才触发 click
+  const pointerDownOnButton = useRef(false)
 
   useEffect(() => {
     const g = scaleRef.current
@@ -70,38 +68,31 @@ function AltarButtonInner({
     })
     return () => {
       tween.kill()
-      if (longPressTimer.current) clearTimeout(longPressTimer.current)
     }
   }, [])
 
-  // 直接 ref 操作 scale，绕过 React state 批处理（解决 Chrome 快速点击不缩小）
+  // 按压缩放直接 ref 操作，无过渡动画；
+  // 仅在弹出动画完成后（clickable=true）才生效，避免覆盖 gsap 动画
   const handlePointerDown = () => {
     if (!clickable) return
+    pointerDownOnButton.current = true
     scaleRef.current?.scale.setScalar(PRESS_SCALE)
-    longPressFired.current = false
-    if (onLongPress) {
-      longPressTimer.current = setTimeout(() => {
-        longPressFired.current = true
-        onLongPress()
-      }, longPressMs)
-    }
   }
 
+  // up 时若 down 也在本按钮，自触发 onClick（不依赖浏览器 click 合成）
   const handlePointerUp = () => {
+    if (!clickable) return
     scaleRef.current?.scale.setScalar(1)
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current)
-      longPressTimer.current = null
-    }
+    if (!pointerDownOnButton.current) return
+    pointerDownOnButton.current = false
+    onClick?.()
   }
 
-  const handleClick = () => {
-    // 长按已触发则抑制 click
-    if (longPressFired.current) {
-      longPressFired.current = false
-      return
-    }
-    onClick?.()
+  // pointer 离开或取消：复位，不触发 click
+  const handlePointerCancel = () => {
+    if (!clickable) return
+    scaleRef.current?.scale.setScalar(1)
+    pointerDownOnButton.current = false
   }
 
   return (
@@ -124,11 +115,10 @@ function AltarButtonInner({
             paddingLeft={0}
             paddingRight={0}
             cursor={clickable ? 'pointer' : 'default'}
-            onClick={clickable ? handleClick : undefined}
-            onPointerDown={clickable ? handlePointerDown : undefined}
+            onPointerDown={handlePointerDown}
             onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerUp}
-            onPointerCancel={handlePointerUp}
+            onPointerLeave={handlePointerCancel}
+            onPointerCancel={handlePointerCancel}
             flexDirection="column"
             alignItems="center"
             justifyContent="center"
