@@ -4,6 +4,7 @@ import { Environment, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import Toybox, { type Phase } from '../components/Toybox'
 import StarterSpaceCamera from '../components/StarterSpaceCamera'
+import AltarScreen from '../components/AltarScreen'
 import './StartSpace.css'
 
 /** 程序化生成竖直渐变天空纹理：顶冷蓝 → 地平线暖 → 底暖沙 */
@@ -149,6 +150,7 @@ function StartSpace() {
           shadow-bias={-0.0001}
           shadow-normalBias={0.005}
         />
+        <AltarScreen position={[0, 1, -2.25]} />  
         <Suspense fallback={null}>
           <Toybox
             phase={phase}
