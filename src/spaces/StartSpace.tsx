@@ -165,6 +165,11 @@ function StartSpace() {
           点击进入全屏
         </div>
       )}
+      {isMobile && portrait && (
+        <p className="start-landscape-hint" role="note">
+          建议横屏
+        </p>
+      )}
     </>
   )
 }

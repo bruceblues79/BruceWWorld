@@ -47,7 +47,12 @@ interface ToyboxProps {
   onOpened: () => void
 }
 
-function Toybox({ phase, portrait, onTapStart, onOpened }: ToyboxProps) {
+function Toybox({
+  phase,
+  portrait,
+  onTapStart,
+  onOpened,
+}: ToyboxProps) {
   const { scene } = useGLTF(MODEL_URL)
 
   // 整体缩放：竖屏 0.75 / 横屏 1，外层 group 以此为锚点缩放（含 tap 按钮）
@@ -151,7 +156,6 @@ function Toybox({ phase, portrait, onTapStart, onOpened }: ToyboxProps) {
               key={name}
               position={pos}
               imageSrc={image}
-              // 本次无后续闭环，点击不触发任何逻辑
               onClick={() => {}}
             />
           )

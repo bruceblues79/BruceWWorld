@@ -31,10 +31,11 @@ npm run deploy
 
 1. `tar` 打包 `dist/` → ssh 传到服务器 `/tmp/bww-stage`
 2. **远端校验**：`index.html` 含 `beian.miit.gov.cn` 与 `beian.mps.gov.cn`；`assets/glb/toybox.glb`、`assets/hdr/starter_space.hdr` 存在
-3. **备份现场**：`tar -czf /root/web-backups/html-<时间戳>.tar.gz -C /var/www/html .`
-4. `rm -rf /var/www/html/assets` 后整目录覆盖（所以本地删掉的资源会同步消失）
-5. `chown -R root:root` + `chmod -R a+rX`
-6. 清暂存区 → 外网 `fetch https://svalbardpost.xyz/` 校验
+3. `rm -rf /var/www/html/assets` 后整目录覆盖（所以本地删掉的资源会同步消失）
+4. `chown -R root:root` + `chmod -R a+rX`
+5. 清暂存区 → 外网 `fetch https://svalbardpost.xyz/` 校验
+
+版本由 git 管理，不做服务器端备份。回滚：`git checkout` 上一版后重新 `npm run deploy`。
 
 ## 服务器事实（已侦察确认）
 
@@ -44,7 +45,7 @@ npm run deploy
 | 站点根目录 | `/var/www/html` |
 | nginx 站点配置 | `/etc/nginx/sites-enabled/default`（80 块 301 跳 HTTPS；443 块服务静态站） |
 | 证书 | `/etc/letsencrypt/live/svalbardpost.xyz/`，certbot `authenticator=nginx` 自动续期 |
-| 备份目录 | `/root/web-backups/`（`html-*.tar.gz` 站点快照、`nginx-default-*.conf` 配置快照） |
+| 备份目录 | 无（版本由 git 管理） |
 
 ## 部署后校验
 
@@ -56,14 +57,7 @@ curl -s  --noproxy '*' -m 20 https://svalbardpost.xyz/ | grep -oE '京ICP备[^<]
 
 ## 回滚
 
-```bash
-# 看有哪些快照
-ssh root@111.229.101.32 'ls -lt /root/web-backups/ | head'
-# 站点回滚
-ssh root@111.229.101.32 'tar -xzf /root/web-backups/html-<时间戳>.tar.gz -C /var/www/html && chown -R root:root /var/www/html'
-# nginx 配置回滚
-ssh root@111.229.101.32 'cp /root/web-backups/nginx-default-<时间戳>.conf /etc/nginx/sites-enabled/default && nginx -t && systemctl reload nginx'
-```
+版本由 git 管理，回滚即 `git checkout` 上一版后重新 `npm run deploy`。
 
 ## 排错
 

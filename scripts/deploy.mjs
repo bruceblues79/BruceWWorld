@@ -2,10 +2,10 @@
 /**
  * 一键部署：把 dist/ 发布到腾讯云 svalbardpost.xyz（root@111.229.101.32）
  *
- * 流程：打包上传暂存区 → 远端校验（备案链接 + 关键资产）→ 备份现有目录
- *       → 清旧 assets 并切换 → 归一属主/权限 → 清理 → 外网校验
+ * 流程：打包上传暂存区 → 远端校验（备案链接 + 关键资产）→ 清旧 assets 并切换
+ *       → 归一属主/权限 → 清理 → 外网校验
  * 用法：npm run deploy（等价于 npm run build + node scripts/deploy.mjs）
- * 回滚：服务器上 /root/web-backups/html-<时间戳>.tar.gz 解开覆盖 /var/www/html 即可
+ * 回滚：git checkout 上一版 + npm run deploy（版本由 git 管理，不做服务器端备份）
  */
 import { execSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -33,7 +33,7 @@ execSync(
   { stdio: 'inherit' },
 )
 
-console.log('[2/4] 远端校验 + 备份 + 切换 ...')
+console.log('[2/4] 远端校验 + 切换 ...')
 runRemote(`
 set -e
 test -f ${STAGE}/index.html
@@ -43,14 +43,11 @@ test -f ${STAGE}/assets/glb/toybox.glb
 test -f ${STAGE}/assets/hdr/starter_space.hdr
 find ${STAGE} -type d -exec chmod 755 {} +
 find ${STAGE} -type f -exec chmod 644 {} +
-mkdir -p /root/web-backups
-tar -czf /root/web-backups/html-$(date +%Y%m%d-%H%M%S).tar.gz -C ${REMOTE_ROOT} .
 rm -rf ${REMOTE_ROOT}/assets
 cp -a ${STAGE}/. ${REMOTE_ROOT}/
 chown -R root:root ${REMOTE_ROOT}
 chmod -R a+rX ${REMOTE_ROOT}
 echo "  暂存文件数: $(find ${STAGE} -type f | wc -l)"
-echo "  已备份旧站到 /root/web-backups/"
 echo "  已切换 ${REMOTE_ROOT}"
 `)
 
