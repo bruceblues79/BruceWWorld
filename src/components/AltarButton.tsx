@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
+import { useLoader } from '@react-three/fiber'
 import { Image } from '@react-three/uikit'
 import { Button } from '@react-three/uikit-default'
 import { Billboard } from '@react-three/drei'
@@ -13,6 +14,9 @@ import type { Vector3Tuple } from 'three'
 // - 按压反馈：直接 ref 操作 scale 0.95，绕过 React state 批处理
 // - 可配置长按阈值 longPressMs，到时触发 onLongPress 并抑制 onClick
 // - 尺寸 0.2 × 0.2 世界单位
+//
+// 纹理走 R3F useLoader 缓存：与 Toybox 模块加载时的 useLoader.preload 同源，
+// 开盒时缓存命中，AltarButtonInner 直接同步拿到纹理，不挂起 Suspense
 
 const BUTTON_SIZE = 0.2
 // px → 世界单位换算率：1px = 0.001 世界单位（与 ToyboxTapButton 一致）
@@ -37,6 +41,15 @@ function AltarButtonInner({
   longPressMs = 500,
   onLongPress,
 }: AltarButtonProps) {
+  // 走 R3F 缓存取纹理（已由 Toybox 模块加载时 preload 预热）；
+  // colorSpace / matrixAutoUpdate 与 uikit 内部 loadTextureImpl 保持一致，
+  // three Texture 只能原地修改属性，与 React Compiler immutability 不兼容
+  const texture = useLoader(THREE.TextureLoader, imageSrc)
+  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
+  texture.colorSpace = THREE.SRGBColorSpace
+  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
+  texture.matrixAutoUpdate = false
+
   // 内层 group 承载 scale 弹出动画 + 按压反馈（外层 Billboard 只负责旋转，不缩放）
   const scaleRef = useRef<THREE.Group>(null)
   const [clickable, setClickable] = useState(false)
@@ -121,7 +134,7 @@ function AltarButtonInner({
             justifyContent="center"
           >
             <Image
-              src={imageSrc}
+              src={texture}
               width="100%"
               height="100%"
               objectFit="cover"

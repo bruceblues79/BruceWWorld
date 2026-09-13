@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useLoader } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
@@ -29,6 +29,13 @@ const ALTAR_NODES = [
   { name: 'altar_person', image: '/assets/textures/altar_person.png' },
   { name: 'altar_box', image: '/assets/textures/altar_box.png' },
 ] as const
+
+// 模块加载时即预热三张 altar PNG 纹理（进入 R3F 的 useLoader 缓存）：
+// StartSpace 一旦 import 本模块，请求即开始，与 GLB/HDR 并行；
+// AltarButton 内 useLoader 命中缓存直接返回纹理，不再挂起 Suspense
+for (const { image } of ALTAR_NODES) {
+  useLoader.preload(THREE.TextureLoader, image)
+}
 
 export type Phase = 'default' | 'opening' | 'opened'
 

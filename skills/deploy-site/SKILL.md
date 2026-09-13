@@ -77,6 +77,8 @@ ssh root@111.229.101.32 'cp /root/web-backups/nginx-default-<时间戳>.conf /et
 - **⚠️ 远端 / 提交类操作必须非沙箱前台执行**：沙箱化的命令**读不到 `C:\Users\bruce\.ssh`**（`Host key verification failed` / `hostkeys_foreach failed ... Permission denied`），而**后台任务（run_in_background）默认沙箱化** → ssh / scp / 部署脚本在后台必然失败。规则：`npm run deploy` 与所有 ssh / scp / git 提交推送**放前台并关闭沙箱**，不要丢后台。
 - **`pkill -f "<pattern>"` 会自匹配当前命令行**：命令里出现同样字符串就会把自己杀掉（退出码 255）。用括号技巧规避，例如 `pkill -9 -f "[c]ertbot renew"`。
 - 若 `certbot` 报 `Another instance of Certbot is already running`（多为被中断的任务留下），先清进程与 `/var/lib/letsencrypt/.certbot.lock`、`/var/log/letsencrypt/.certbot.lock`。
+- **Windows 本机 SSH 必须带 `-4`**：本机网络 IPv6 不通到 `111.229.101.32`，默认解析优先 IPv6 会超时（`Connection timed out`）。所有预检/回滚命令里的 `ssh root@111.229.101.32` 改写成 `ssh -4 -o ConnectTimeout=20 root@111.229.101.32`。`npm run deploy` 跑的 ssh/scp 由 node 子进程发起也受同一规则约束——脚本内已带 `-o ConnectTimeout`，但需确认走 IPv4，必要时在 `~/.ssh/config` 给 `111.229.101.32` 加 `AddressFamily inet`。注意：Trae Work 远程 Linux 环境无此问题，IPv4 直连即可。
+- **Windows PowerShell `curl` 别名到 `Invoke-WebRequest`**：`curl -m` / `curl -s` 会因参数歧义报 `AmbiguousParameter`。部署后校验一律改用 `curl.exe` 显式调用真 curl，例如 `curl.exe -sI --noproxy '*' --max-time 20 https://svalbardpost.xyz/`。
 
 ## 合规约束（不可退化）
 
