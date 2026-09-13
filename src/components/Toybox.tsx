@@ -1,9 +1,11 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import ToyboxTapButton from './ToyboxTapButton'
+import AltarButton from './AltarButton'
+import type { Vector3Tuple } from 'three'
 
 const MODEL_URL = '/assets/glb/toybox.glb'
 // 整个 toybox + tap 按钮的「世界锚点」
@@ -21,6 +23,13 @@ const ROTATE_TURN = -Math.PI / 2 // root_rotate 再绕局部 y 转 -90°
 const PAUSE_SECONDS = 0.3 // 段间停顿
 const EASE = 'power2.inOut'
 
+// 开盒后挂载次级按钮的三个祭坛节点（与 public/assets/textures 下 PNG 一一对应）
+const ALTAR_NODES = [
+  { name: 'altar_heart', image: '/assets/textures/altar_heart.png' },
+  { name: 'altar_person', image: '/assets/textures/altar_person.png' },
+  { name: 'altar_box', image: '/assets/textures/altar_box.png' },
+] as const
+
 export type Phase = 'default' | 'opening' | 'opened'
 
 interface ToyboxProps {
@@ -37,6 +46,9 @@ function Toybox({ phase, portrait, onTapStart, onOpened }: ToyboxProps) {
   // 整体缩放：竖屏 0.75 / 横屏 1，外层 group 以此为锚点缩放（含 tap 按钮）
   const groupRef = useRef<THREE.Group>(null!)
   const targetScale = portrait ? 0.75 : 1
+
+  // 开盒动画完成后，三个祭坛节点在 toybox group 局部坐标中的位置（用于挂按钮）
+  const [altarPositions, setAltarPositions] = useState<Record<string, Vector3Tuple>>({})
 
   // 挂载时直接落到目标 scale，避免加载瞬间出现 1→0.75 的缩放动画
   useLayoutEffect(() => {
@@ -92,6 +104,25 @@ function Toybox({ phase, portrait, onTapStart, onOpened }: ToyboxProps) {
     }
   }, [phase, scene])
 
+  // 开盒动画完成（phase==='opened'）后，取三个祭坛节点的世界坐标并换算为
+  // toybox group 局部坐标，供 AltarButton 挂载。节点缺失则跳过该项。
+  useEffect(() => {
+    if (phase !== 'opened') return
+    const group = groupRef.current
+    if (!group) return
+    const positions: Record<string, Vector3Tuple> = {}
+    const world = new THREE.Vector3()
+    for (const { name } of ALTAR_NODES) {
+      const node = scene.getObjectByName(name)
+      if (!node) continue
+      node.updateWorldMatrix(true, false)
+      node.getWorldPosition(world)
+      const local = group.worldToLocal(world.clone())
+      positions[name] = [local.x, local.y, local.z]
+    }
+    setAltarPositions(positions)
+  }, [phase, scene])
+
   return (
     // model 与 tap 面板同处一个 group：面板用局部偏移挂在此 group 下，
     // 转动视角时面板始终保持与 toybox 的相对空间位置（真 3D，非 billboard）
@@ -104,6 +135,20 @@ function Toybox({ phase, portrait, onTapStart, onOpened }: ToyboxProps) {
           onClick={onTapStart}
         />
       )}
+      {phase === 'opened' &&
+        ALTAR_NODES.map(({ name, image }) => {
+          const pos = altarPositions[name]
+          if (!pos) return null
+          return (
+            <AltarButton
+              key={name}
+              position={pos}
+              imageSrc={image}
+              // 本次无后续闭环，点击不触发任何逻辑
+              onClick={() => {}}
+            />
+          )
+        })}
     </group>
   )
 }
