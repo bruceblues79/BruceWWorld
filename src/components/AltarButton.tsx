@@ -55,7 +55,9 @@ function AltarButtonInner({ position, imageSrc, onClick }: AltarButtonProps) {
             width={BUTTON_SIZE / PIXEL_SIZE}
             height={BUTTON_SIZE / PIXEL_SIZE}
             pixelSize={PIXEL_SIZE}
-            borderRadius={8}
+            borderRadius={24}
+            borderColor="#ffffff"
+            borderWidth={4}
             backgroundColor="rgba(255, 255, 255, 0.2)"
             depthWrite={false}
             renderOrder={10}

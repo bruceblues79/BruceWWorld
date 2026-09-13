@@ -3,12 +3,6 @@
 
 #root canvas {
   display: block;
-  /* 阻止长按呼出 copy/look-up 菜单、文本选择与点击高亮 */
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: none;
 }
 
 /* Loading overlay：背景透明（body 渐变透出）、不挡用户交互（pointer-events: none）。
