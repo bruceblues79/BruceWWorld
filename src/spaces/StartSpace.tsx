@@ -178,6 +178,9 @@ function StartSpace() {
           <Environment files="/assets/hdr/starter_space.hdr" />
         </Suspense>
       </Canvas>
+      {/* 主题字：仅 StartSpace（首页）显示，其他平行 space 不渲染。
+          fixed 定位 + z-index 25，位于备案(30)之下、loading(40)之下 */}
+      <div className="start-theme-title" aria-hidden="true">大同的技术分享</div>
       <LoadingOverlay />
       {isMobile && !isFullscreen && (
         <div className="start-rotate-hint" role="note" onClick={requestFullscreen}>
