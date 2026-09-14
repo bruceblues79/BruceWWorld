@@ -50,6 +50,9 @@ export type LiteGameScreenProps = {
 // - 点击（pointerdown→pointerup 同在本按钮）触发 onSelect
 // - 选中态：borderWidth 3 + 纯白边框；未选中：borderWidth 1 + 半透明白边框
 // - 图片 100% 填充，objectFit=cover 居中裁切
+// - 行高按 4:1 比例固定：内容区内宽 564px ÷ 4 = 141px。
+//   不用 flexGrow=1（单行会撑满整个内容区），多行时从顶部堆叠、下方留空。
+const ROW_HEIGHT = 141
 function GameRow({
   game,
   selected,
@@ -81,10 +84,10 @@ function GameRow({
   return (
     <Button
       variant="ghost"
-      flexGrow={1}
       width="100%"
+      height={ROW_HEIGHT}
       borderRadius={4}
-      borderWidth={selected ? 3 : 1}
+      borderWidth={selected ? 6 : 1}
       borderColor={selected ? '#ffffff' : 'rgba(255, 255, 255, 0.3)'}
       backgroundColor="rgba(0, 0, 0, 0)"
       paddingTop={0}
