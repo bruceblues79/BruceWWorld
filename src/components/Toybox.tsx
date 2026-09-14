@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import gsap from 'gsap'
 import ToyboxTapButton from './ToyboxTapButton'
 import AltarButton from './AltarButton'
+import { type AltarName } from './AltarScreen'
 import type { Vector3Tuple } from 'three'
 
 const MODEL_URL = '/assets/glb/toybox.glb'
@@ -23,11 +24,12 @@ const ROTATE_TURN = -Math.PI / 2 // root_rotate 再绕局部 y 转 -90°
 const PAUSE_SECONDS = 0.3 // 段间停顿
 const EASE = 'power2.inOut'
 
-// 开盒后挂载次级按钮的三个祭坛节点（与 public/assets/textures 下 PNG 一一对应）
+// 开盒后挂载次级按钮的三个祭坛节点（与 public/assets/textures 下 PNG 一一对应）。
+// altar 字段是 AltarName（box/heart/person），用于 AltarScreen 路由到对应 banner。
 const ALTAR_NODES = [
-  { name: 'altar_heart', image: '/assets/textures/altar_heart.png' },
-  { name: 'altar_person', image: '/assets/textures/altar_person.png' },
-  { name: 'altar_box', image: '/assets/textures/altar_box.png' },
+  { name: 'altar_heart', image: '/assets/textures/altar_heart.png', altar: 'heart' as AltarName },
+  { name: 'altar_person', image: '/assets/textures/altar_person.png', altar: 'person' as AltarName },
+  { name: 'altar_box', image: '/assets/textures/altar_box.png', altar: 'box' as AltarName },
 ] as const
 
 // 模块加载时即预热三张 altar PNG 纹理（进入 R3F 的 useLoader 缓存）：
@@ -45,8 +47,9 @@ interface ToyboxProps {
   portrait: boolean
   /** 开盒后三个 AltarButton 是否渲染（开 AltarScreen 时隐藏，关闭时重显） */
   showAltarButtons: boolean
-  /** 点按任意 AltarButton 时触发（StartSpace 据此打开 AltarScreen 并隐藏按钮） */
-  onAltarButtonClick: () => void
+  /** 点按任意 AltarButton 时触发（StartSpace 据此打开 AltarScreen 并隐藏按钮）。
+   *  参数为该 altar 的标识，用于 AltarScreen 路由到对应 banner */
+  onAltarButtonClick: (altar: AltarName) => void
   onTapStart: () => void
   onOpened: () => void
 }
@@ -154,7 +157,7 @@ function Toybox({
         />
       )}
       {phase === 'opened' && showAltarButtons &&
-        ALTAR_NODES.map(({ name, image }) => {
+        ALTAR_NODES.map(({ name, image, altar }) => {
           const pos = altarPositions[name]
           if (!pos) return null
           return (
@@ -162,7 +165,7 @@ function Toybox({
               key={name}
               position={pos}
               imageSrc={image}
-              onClick={onAltarButtonClick}
+              onClick={() => onAltarButtonClick(altar)}
             />
           )
         })}

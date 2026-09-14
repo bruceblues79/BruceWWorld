@@ -11,13 +11,20 @@ import type { Vector3Tuple } from 'three'
 // [0, 1, -1.75]，介于相机与 toybox 之间。外层 drei Billboard 始终朝向相机，
 // 保证 OrbitControls 环绕时面板始终可见可读。
 //
-// 显隐：组件初始挂载且默认不可见（scale 0），由父组件通过 visible prop 控制。
-// visible true→false 时即时归零（无动画）；false→true 时 gsap scale 0.8→1，
-// 0.3s easeOut。遵循 project_memory：UI 组件初始挂载 + scale 控制，不走条件渲染。
+// 路由：根据 altarName（box / heart / person）从三张 banner 纹理中取对应一张，
+// 显示在信息区顶部作为 title 条（banner 比例 8:1，显示尺寸 600×75px 不变形）。
+// box → banner_xr、heart → banner_game、person → banner_me。
 //
-// 布局：纵向分 5，上 4/5 为信息区（暂空，后续填内容），下 1/5 为操作行，
-// 内含 4 个横向排列的正方按钮（无文字 + 图标）：上一页 / 下一页 / 确定 / 返回。
-// 当前仅「返回」实装：调用 onClose 关闭面板并重新显示 AltarButton（无动画）。
+// 显隐：组件初始挂载且默认不可见（scale 0），由父组件通过 altarName prop 控制。
+// altarName 非 null 时显示（true→false 即时归零；false→true 时 gsap scale
+// 0.8→1，0.3s easeOut）。遵循 project_memory：UI 组件初始挂载 + scale 控制，
+// 不走条件渲染。
+//
+// 布局：纵向分 5，上 4/5 为信息区，下 1/5 为操作行。信息区内部分两段：
+// 顶部 banner 条（600×75px，保持 8:1 比例不变形）+ 剩余内容区（暂空，后续填）。
+// 操作行内含 4 个横向排列的正方按钮（无文字 + 图标）：
+// 上一页 / 下一页 / 确定 / 返回。当前仅「返回」实装：调用 onClose 关闭面板
+// 并重新显示 AltarButton（无动画）。
 //
 // 用 uikit-default 的 Card（继承 Container 并通过 defaultOverrides 预设
 // 背景色/边框/圆角/flexDirection 主题默认值，减少易遗漏的属性）。
@@ -46,6 +53,8 @@ const PIXEL_SIZE = 0.001
 // 操作行高度 = 1/5 面板高；操作按钮正方，略小于行高留间距
 const OP_ROW_HEIGHT = PANEL_HEIGHT / 5
 const OP_BUTTON_SIZE = OP_ROW_HEIGHT - 20
+// banner 条高度：保持 512×64 源图 8:1 比例不变形，宽 = 面板宽 600px
+const BANNER_HEIGHT = PANEL_WIDTH / 8
 // 按压缩放（与 AltarButton 一致：直 ref 操作，无过渡）
 const PRESS_SCALE = 0.95
 // 弹出动画参数
@@ -61,16 +70,31 @@ const OP_BUTTON_TEXTURES = [
   '/assets/textures/btn_back.png',
 ] as const
 
-// 模块加载时即预热四张操作按钮 PNG 纹理（与 Toybox 的 altar PNG 预热同模式）：
-// StartSpace 一旦 import 本模块，请求即开始，与 GLB/HDR/altar 纹理并行；
-// 操作按钮内 useLoader 命中缓存直接返回纹理，不挂起 Suspense
+// 路由表：altarName → banner 纹理 URL
+// box → banner_xr、heart → banner_game、person → banner_me
+const BANNER_BY_ALTAR = {
+  box: '/assets/textures/banner_xr.png',
+  heart: '/assets/textures/banner_game.png',
+  person: '/assets/textures/banner_me.png',
+} as const
+
+// 模块加载时即预热四张操作按钮 PNG + 三张 banner 纹理（与 Toybox 的
+// altar PNG 预热同模式）：StartSpace 一旦 import 本模块，请求即开始，
+// 与 GLB/HDR/altar 纹理并行；组件内 useLoader 命中缓存直接返回纹理，
+// 不挂起 Suspense
 for (const url of OP_BUTTON_TEXTURES) {
   useLoader.preload(THREE.TextureLoader, url)
 }
+for (const url of Object.values(BANNER_BY_ALTAR)) {
+  useLoader.preload(THREE.TextureLoader, url)
+}
+
+export type AltarName = 'box' | 'heart' | 'person'
 
 export type AltarScreenProps = {
   position?: Vector3Tuple
-  visible: boolean
+  /** 当前路由的 altar；非 null 时显示面板，null 时隐藏 */
+  altarName: AltarName | null
   onClose: () => void
 }
 
@@ -149,9 +173,12 @@ function OpButton({
 
 function AltarScreenInner({
   position,
-  visible,
+  altarName,
   onClose,
 }: AltarScreenProps) {
+  // altarName 非 null 即可见，沿用原有显隐动画逻辑
+  const visible = altarName !== null
+
   // 外层 group 承载显隐 scale 动画（Billboard 只负责旋转，不缩放）
   const scaleRef = useRef<THREE.Group>(null)
 
@@ -181,6 +208,10 @@ function AltarScreenInner({
   const texNext = useLoader(THREE.TextureLoader, OP_BUTTON_TEXTURES[1])
   const texConform = useLoader(THREE.TextureLoader, OP_BUTTON_TEXTURES[2])
   const texBack = useLoader(THREE.TextureLoader, OP_BUTTON_TEXTURES[3])
+  // 三张 banner 纹理同样走 R3F 缓存（已模块级 preload 预热），按 altarName 路由
+  const texBannerXr = useLoader(THREE.TextureLoader, BANNER_BY_ALTAR.box)
+  const texBannerGame = useLoader(THREE.TextureLoader, BANNER_BY_ALTAR.heart)
+  const texBannerMe = useLoader(THREE.TextureLoader, BANNER_BY_ALTAR.person)
   // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
   texPrev.colorSpace = THREE.SRGBColorSpace
   // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
@@ -197,7 +228,28 @@ function AltarScreenInner({
   texBack.colorSpace = THREE.SRGBColorSpace
   // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
   texBack.matrixAutoUpdate = false
+  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
+  texBannerXr.colorSpace = THREE.SRGBColorSpace
+  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
+  texBannerXr.matrixAutoUpdate = false
+  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
+  texBannerGame.colorSpace = THREE.SRGBColorSpace
+  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
+  texBannerGame.matrixAutoUpdate = false
+  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
+  texBannerMe.colorSpace = THREE.SRGBColorSpace
+  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
+  texBannerMe.matrixAutoUpdate = false
   const textures = [texPrev, texNext, texConform, texBack]
+  // 按 altarName 路由到对应 banner 纹理；altarName 为 null 时不渲染 Image
+  const bannerTexture =
+    altarName === 'box'
+      ? texBannerXr
+      : altarName === 'heart'
+        ? texBannerGame
+        : altarName === 'person'
+          ? texBannerMe
+          : null
 
   // 只有「返回」（最后一项）实装 onClose，其余暂为空函数待后续实装
   const handlers = [
@@ -227,16 +279,29 @@ function AltarScreenInner({
             paddingLeft={0}
             paddingRight={0}
           >
-            {/* 信息区（上 4/5，暂空，后续填内容）。
-                用 CardContent（uikit-default，与 Card 同套 build() 路径，
-                自带 flexDirection=column 主题默认值，减少易遗漏的属性） */}
+            {/* 信息区（上 4/5）。CardContent 自带 flexDirection=column 主题默认值，
+                内部纵向分两段：顶部 banner 条（600×75px 保持 8:1 不变形）+
+                剩余内容区（暂空，后续填）。banner 仅在 visible 时渲染——
+                altarName 为 null 时 bannerTexture 为 null，uikit Image 拿到
+                null texture 会报错；同时面板整体 scale=0 不可见，省略 banner
+                无视觉影响 */}
             <CardContent
               height={PANEL_HEIGHT - OP_ROW_HEIGHT}
               paddingTop={0}
               paddingBottom={0}
               paddingLeft={0}
               paddingRight={0}
-            />
+            >
+              {visible && bannerTexture && (
+                <Image
+                  src={bannerTexture}
+                  width="100%"
+                  height={BANNER_HEIGHT}
+                  objectFit="cover"
+                />
+              )}
+              {/* 剩余内容区（暂空，后续填具体内容） */}
+            </CardContent>
             {/* 操作行（下 1/5，四个横向正方按钮）。同样用 CardFooter。
                 OpButton 走 conditional render：visible=false 时卸载释放 uikit
                 内部 activeSignal（按下 back 关闭面板后 pointerLeave 不触发，

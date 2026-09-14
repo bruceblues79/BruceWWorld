@@ -4,7 +4,7 @@ import { Environment, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import Toybox, { type Phase } from '../components/Toybox'
 import StarterSpaceCamera from '../components/StarterSpaceCamera'
-import AltarScreen from '../components/AltarScreen'
+import AltarScreen, { type AltarName } from '../components/AltarScreen'
 import './StartSpace.css'
 
 /** 程序化生成竖直渐变天空纹理：顶冷蓝 → 地平线暖 → 底暖沙 */
@@ -100,9 +100,10 @@ function StartSpace() {
   const { isMobile, isFullscreen, portrait, requestFullscreen } = useLandscapeExperience()
   // starter 场景阶段：default（待开）→ opening（开盒动画中）→ opened（闭环完成）
   const [phase, setPhase] = useState<Phase>('default')
-  // AltarScreen 显隐：点按任意 AltarButton 弹出（带 0.8→1 缩放动画），
-  // 点击「返回」按钮即时关闭。默认不可见。
-  const [showAltarScr, setShowAltarScr] = useState(false)
+  // AltarScreen 显隐 + 路由：点按任意 AltarButton 弹出（带 0.8→1 缩放动画），
+  // 点击「返回」按钮即时关闭。altarName 非 null 时显示，并按其值路由到对应
+  // banner；null 时隐藏。默认 null 不可见。
+  const [currentAltar, setCurrentAltar] = useState<AltarName | null>(null)
   // 三个 AltarButton 的显隐：开 AltarScreen 时隐藏，关闭时重新显示。
   // 隐藏走条件渲染（卸载），重新显示时重播 AltarButton 弹出动画。
   const [showAltarButtons, setShowAltarButtons] = useState(true)
@@ -116,12 +117,12 @@ function StartSpace() {
     }
   }, [active])
 
-  const openAltarScreen = () => {
-    setShowAltarScr(true)
+  const openAltarScreen = (altar: AltarName) => {
+    setCurrentAltar(altar)
     setShowAltarButtons(false)
   }
   const closeAltarScreen = () => {
-    setShowAltarScr(false)
+    setCurrentAltar(null)
     setShowAltarButtons(true)
   }
 
@@ -163,7 +164,7 @@ function StartSpace() {
           shadow-bias={-0.0001}
           shadow-normalBias={0.005}
         />
-        <AltarScreen position={[0, 1, -1.75]} visible={showAltarScr} onClose={closeAltarScreen} />
+        <AltarScreen position={[0, 1, -1.75]} altarName={currentAltar} onClose={closeAltarScreen} />
         <Suspense fallback={null}>
           <Toybox
             phase={phase}
