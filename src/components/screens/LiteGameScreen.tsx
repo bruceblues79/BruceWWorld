@@ -29,6 +29,7 @@ export const GAMES: GameItem[] = [
     id: 'defend_troy',
     name: 'DefendTroy',
     image: '/assets/textures/game_def_troy.png',
+    url: 'https://svalbardpost.xyz/games/defend-troy/',
   },
 ]
 
