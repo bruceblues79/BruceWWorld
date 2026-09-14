@@ -265,14 +265,14 @@ function AltarScreenInner({
           : null
 
   // 操作行按钮回调（顺序：上一页 / 下一页 / 确定 / 返回）。
-  // 「确定」仅在 game 路由且有选中游戏时生效：打开该游戏的 url（外链或 WebGL 页）。
-  // 无 url 则 no-op；XR/Me 路由下确定也 no-op（空占位无子屏交互）。
+  // 「确定」仅在 game 路由且有选中游戏时生效：原地跳转到游戏 url（卸载主站、释放 WebGL context）。
+  // 浏览器后退键 / 子游戏返回按钮可回主站。无 url 则 no-op；XR/Me 路由下确定也 no-op。
   // 「返回」先重置选中态再调用 onClose，避免重开面板时残留旧选中。
   const handleConfirm = () => {
     if (altarName !== 'heart' || !selectedGame) return
     const game = GAMES.find((g) => g.id === selectedGame)
     if (game?.url) {
-      window.open(game.url, '_blank')
+      window.location.href = game.url
     }
   }
   const handleClose = () => {
