@@ -4,7 +4,7 @@ import { Environment, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import Toybox, { type Phase } from '../components/Toybox'
 import StarterSpaceCamera from '../components/StarterSpaceCamera'
-import AltarScreen from '../components/AltarScreen'
+import AltarScreen, { type AltarName } from '../components/AltarScreen'
 import './StartSpace.css'
 
 /** 程序化生成竖直渐变天空纹理：顶冷蓝 → 地平线暖 → 底暖沙 */
@@ -96,34 +96,33 @@ function useLandscapeExperience() {
   return { isMobile, isFullscreen, portrait, requestFullscreen }
 }
 
-function LoadingOverlay() {
-  const { active } = useProgress()
-  if (!active) return null
-  return (
-    <div className="start-loading" role="status" aria-live="polite">
-      <span className="start-loading-spinner" aria-hidden="true" />
-      <p>loading</p>
-    </div>
-  )
-}
-
 function StartSpace() {
   const { isMobile, isFullscreen, portrait, requestFullscreen } = useLandscapeExperience()
   // starter 场景阶段：default（待开）→ opening（开盒动画中）→ opened（闭环完成）
   const [phase, setPhase] = useState<Phase>('default')
-  // AltarScreen 显隐：点按任意 AltarButton 弹出（带 0.8→1 缩放动画），
-  // 点击「返回」按钮即时关闭。默认不可见。
-  const [showAltarScr, setShowAltarScr] = useState(false)
+  // AltarScreen 显隐 + 路由：点按任意 AltarButton 弹出（带 0.8→1 缩放动画），
+  // 点击「返回」按钮即时关闭。altarName 非 null 时显示，并按其值路由到对应
+  // banner；null 时隐藏。默认 null 不可见。
+  const [currentAltar, setCurrentAltar] = useState<AltarName | null>(null)
   // 三个 AltarButton 的显隐：开 AltarScreen 时隐藏，关闭时重新显示。
   // 隐藏走条件渲染（卸载），重新显示时重播 AltarButton 弹出动画。
   const [showAltarButtons, setShowAltarButtons] = useState(true)
 
-  const openAltarScreen = () => {
-    setShowAltarScr(true)
+  // 资源加载进度：GLB/HDR 等 Suspense 资源加载完成后，移除 index.html 里的初始加载层。
+  // useProgress 基于 THREE.DefaultLoadingManager，可在 Canvas 外调用。
+  const { active } = useProgress()
+  useEffect(() => {
+    if (!active) {
+      document.getElementById('initial-loading')?.remove()
+    }
+  }, [active])
+
+  const openAltarScreen = (altar: AltarName) => {
+    setCurrentAltar(altar)
     setShowAltarButtons(false)
   }
   const closeAltarScreen = () => {
-    setShowAltarScr(false)
+    setCurrentAltar(null)
     setShowAltarButtons(true)
   }
 
@@ -165,7 +164,7 @@ function StartSpace() {
           shadow-bias={-0.0001}
           shadow-normalBias={0.005}
         />
-        <AltarScreen position={[0, 1, -1.75]} visible={showAltarScr} onClose={closeAltarScreen} />
+        <AltarScreen position={[0, 1, -1.75]} altarName={currentAltar} onClose={closeAltarScreen} />
         <Suspense fallback={null}>
           <Toybox
             phase={phase}
@@ -178,7 +177,9 @@ function StartSpace() {
           <Environment files="/assets/hdr/starter_space.hdr" />
         </Suspense>
       </Canvas>
-      <LoadingOverlay />
+      {/* 主题字：仅 StartSpace（首页）显示，其他平行 space 不渲染。
+          fixed 定位 + z-index 25，位于备案(30)之下、loading(40)之下 */}
+      <div className="start-theme-title" aria-hidden="true">大同的技术分享</div>
       {isMobile && !isFullscreen && (
         <div className="start-rotate-hint" role="note" onClick={requestFullscreen}>
           点击进入全屏
@@ -186,7 +187,7 @@ function StartSpace() {
       )}
       {isMobile && portrait && (
         <p className="start-landscape-hint" role="note">
-          建议横屏
+          可横屏
         </p>
       )}
     </>
