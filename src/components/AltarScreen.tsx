@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useLoader } from '@react-three/fiber'
 import { Image } from '@react-three/uikit'
 import { Card, CardContent, CardFooter, Button } from '@react-three/uikit-default'
@@ -6,6 +6,9 @@ import { Billboard } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import type { Vector3Tuple } from 'three'
+import XRTechScreen from './screens/XRTechScreen'
+import AboutMeScreen from './screens/AboutMeScreen'
+import LiteGameScreen, { GAMES } from './screens/LiteGameScreen'
 
 // AltarScreen：祭坛场景的悬浮内容面板，固定挂载在 starter canvas 世界坐标
 // [0, 1, -1.75]，介于相机与 toybox 之间。外层 drei Billboard 始终朝向相机，
@@ -13,7 +16,8 @@ import type { Vector3Tuple } from 'three'
 //
 // 路由：根据 altarName（box / heart / person）从三张 banner 纹理中取对应一张，
 // 显示在信息区顶部作为 title 条（banner 比例 8:1，显示尺寸 600×75px 不变形）。
-// box → banner_xr、heart → banner_game、person → banner_me。
+// box → banner_xr → XRTechScreen、heart → banner_game → LiteGameScreen、
+// person → banner_me → AboutMeScreen。
 //
 // 显隐：组件初始挂载且默认不可见（scale 0），由父组件通过 altarName prop 控制。
 // altarName 非 null 时显示（true→false 即时归零；false→true 时 gsap scale
@@ -21,10 +25,15 @@ import type { Vector3Tuple } from 'three'
 // 不走条件渲染。
 //
 // 布局：纵向分 5，上 4/5 为信息区，下 1/5 为操作行。信息区内部分两段：
-// 顶部 banner 条（600×75px，保持 8:1 比例不变形）+ 剩余内容区（暂空，后续填）。
+// 顶部 banner 条（600×75px，保持 8:1 比例不变形）+ 剩余内容区。
+// 内容区外包一层 Card（borderRadius=0 直角边框、borderWidth=2、半透明白底）
+// 作为「不带圆角的线」提供划分感，内部按路由渲染对应子屏组件：
+//   - XRTechScreen（xr 作品，空占位）
+//   - LiteGameScreen（轻游戏选择列表，3 行/页，点选高亮+确定跳转）
+//   - AboutMeScreen（简历，空占位）
 // 操作行内含 4 个横向排列的正方按钮（无文字 + 图标）：
-// 上一页 / 下一页 / 确定 / 返回。当前仅「返回」实装：调用 onClose 关闭面板
-// 并重新显示 AltarButton（无动画）。
+// 上一页 / 下一页 / 确定 / 返回。「确定」在 game 路由下打开选中游戏的 url；
+// 「返回」调用 onClose 关闭面板并重新显示 AltarButton（无动画）。
 //
 // 用 uikit-default 的 Card（继承 Container 并通过 defaultOverrides 预设
 // 背景色/边框/圆角/flexDirection 主题默认值，减少易遗漏的属性）。
@@ -179,6 +188,10 @@ function AltarScreenInner({
   // altarName 非 null 即可见，沿用原有显隐动画逻辑
   const visible = altarName !== null
 
+  // game 路由下的选中游戏 id（供「确定」按钮读取并跳转）。
+  // 关闭面板时（handleClose）重置，避免重开后残留旧选中态。
+  const [selectedGame, setSelectedGame] = useState<string | null>(null)
+
   // 外层 group 承载显隐 scale 动画（Billboard 只负责旋转，不缩放）
   const scaleRef = useRef<THREE.Group>(null)
 
@@ -251,12 +264,26 @@ function AltarScreenInner({
           ? texBannerMe
           : null
 
-  // 只有「返回」（最后一项）实装 onClose，其余暂为空函数待后续实装
+  // 操作行按钮回调（顺序：上一页 / 下一页 / 确定 / 返回）。
+  // 「确定」仅在 game 路由且有选中游戏时生效：打开该游戏的 url（外链或 WebGL 页）。
+  // 无 url 则 no-op；XR/Me 路由下确定也 no-op（空占位无子屏交互）。
+  // 「返回」先重置选中态再调用 onClose，避免重开面板时残留旧选中。
+  const handleConfirm = () => {
+    if (altarName !== 'heart' || !selectedGame) return
+    const game = GAMES.find((g) => g.id === selectedGame)
+    if (game?.url) {
+      window.open(game.url, '_blank')
+    }
+  }
+  const handleClose = () => {
+    setSelectedGame(null)
+    onClose()
+  }
   const handlers = [
-    () => {},
-    () => {},
-    () => {},
-    onClose,
+    () => {}, // 上一页：暂未实装（GAMES ≤ 3 无需分页）
+    () => {}, // 下一页：暂未实装
+    handleConfirm,
+    handleClose, // 返回
   ] as const
 
   return (
@@ -281,16 +308,16 @@ function AltarScreenInner({
           >
             {/* 信息区（上 4/5）。CardContent 自带 flexDirection=column 主题默认值，
                 内部纵向分两段：顶部 banner 条（600×75px 保持 8:1 不变形）+
-                剩余内容区（暂空，后续填）。banner 仅在 visible 时渲染——
-                altarName 为 null 时 bannerTexture 为 null，uikit Image 拿到
-                null texture 会报错；同时面板整体 scale=0 不可见，省略 banner
-                无视觉影响 */}
+                内容区框架。banner 仅在 visible 时渲染——altarName 为 null 时
+                bannerTexture 为 null，uikit Image 拿到 null texture 会报错；
+                同时面板整体 scale=0 不可见，省略 banner 无视觉影响。 */}
             <CardContent
               height={PANEL_HEIGHT - OP_ROW_HEIGHT}
               paddingTop={0}
               paddingBottom={0}
               paddingLeft={0}
               paddingRight={0}
+              flexDirection="column"
             >
               {visible && bannerTexture && (
                 <Image
@@ -300,7 +327,29 @@ function AltarScreenInner({
                   objectFit="cover"
                 />
               )}
-              {/* 剩余内容区（暂空，后续填具体内容） */}
+              {/* 内容区框架：Card 默认 borderRadius.lg，这里覆盖为 0 得到直角边框，
+                  作为「不带圆角的线」划分 banner 与内容区、内容区与操作行。
+                  flexGrow=1 填满 banner 之外的信息区高度（≈565px）。 */}
+              {visible && (
+                <Card
+                  flexGrow={1}
+                  borderRadius={0}
+                  borderWidth={2}
+                  borderColor="#ffffff"
+                  backgroundColor="rgba(255, 255, 255, 0.08)"
+                  padding={16}
+                  flexDirection="column"
+                >
+                  {altarName === 'box' && <XRTechScreen />}
+                  {altarName === 'heart' && (
+                    <LiteGameScreen
+                      selected={selectedGame}
+                      onSelect={setSelectedGame}
+                    />
+                  )}
+                  {altarName === 'person' && <AboutMeScreen />}
+                </Card>
+              )}
             </CardContent>
             {/* 操作行（下 1/5，四个横向正方按钮）。同样用 CardFooter。
                 OpButton 走 conditional render：visible=false 时卸载释放 uikit
