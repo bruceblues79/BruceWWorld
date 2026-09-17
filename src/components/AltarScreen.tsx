@@ -124,9 +124,12 @@ export type AltarScreenProps = {
 function OpButton({
   texture,
   onClick,
+  highlighted = false,
 }: {
   texture: THREE.Texture
   onClick: () => void
+  /** 高亮态（轻游戏菜单选中游戏后用于「确定」按钮）：背景更实、边框更粗 */
+  highlighted?: boolean
 }) {
   const pointerDownOnButton = useRef(false)
 
@@ -150,8 +153,8 @@ function OpButton({
       pixelSize={PIXEL_SIZE}
       borderRadius={16}
       borderColor="#ffffff"
-      borderWidth={2}
-      backgroundColor="rgba(255, 255, 255, 0.2)"
+      borderWidth={highlighted ? 3 : 2}
+      backgroundColor={highlighted ? 'rgba(255, 255, 255, 0.55)' : 'rgba(255, 255, 255, 0.2)'}
       depthWrite={false}
       renderOrder={11}
       paddingTop={0}
@@ -372,6 +375,7 @@ function AltarScreenInner({
                   key={i}
                   texture={tex}
                   onClick={handlers[i]}
+                  highlighted={i === 2 && selectedGame !== null}
                 />
               ))}
             </CardFooter>
