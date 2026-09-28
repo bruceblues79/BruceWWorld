@@ -147,12 +147,12 @@ function StartSpace() {
         shadows="percentage"
         dpr={[1, 2]}
       >
-        <StarterSpaceCamera />
+        <StarterSpaceCamera enabled={phase !== 'opening'} />
         <SceneBackground />
         <directionalLight
           ref={lightRef}
           position={[2, 6, 3]}
-          intensity={1.2}
+          intensity={4}
           color="#fff1df"
           castShadow
           shadow-mapSize={[1024, 1024]}
@@ -175,7 +175,10 @@ function StartSpace() {
             onTapStart={() => setPhase('opening')}
             onOpened={() => setPhase('opened')}
           />
-          <Environment files={versionedUrl('/assets/hdr/starter_space.hdr')} />
+          <Environment
+            files={versionedUrl('/assets/hdr/starter_space.hdr')}
+            environmentIntensity={0.6}
+          />
         </Suspense>
       </Canvas>
       {/* 主题字：仅 StartSpace（首页）显示，其他平行 space 不渲染。

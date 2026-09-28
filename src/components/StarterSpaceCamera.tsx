@@ -23,7 +23,7 @@ const POLAR_INITIAL = Math.acos(
 const POLAR_TILT = (10 * Math.PI) / 180
 const DISTANCE_TOLERANCE = 0.5
 
-function StarterSpaceCamera() {
+function StarterSpaceCamera({ enabled = true }: { enabled?: boolean }) {
   return (
     <>
       <PerspectiveCamera
@@ -36,6 +36,7 @@ function StarterSpaceCamera() {
       <OrbitControls
         makeDefault
         target={LOOK_AT}
+        enabled={enabled}
         enablePan={false}
         enableDamping
         dampingFactor={0.08}
