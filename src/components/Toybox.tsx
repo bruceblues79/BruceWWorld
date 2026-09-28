@@ -40,6 +40,8 @@ for (const { image } of ALTAR_NODES) {
   useLoader.preload(THREE.TextureLoader, image)
 }
 
+const WATER_NODE_NAMES = ['water_l', 'water_r'] as const
+
 export type Phase = 'default' | 'opening' | 'opened'
 
 interface ToyboxProps {
@@ -64,39 +66,30 @@ function Toybox({
   onOpened,
 }: ToyboxProps) {
   const { scene } = useGLTF(MODEL_URL)
-  const waterFactory = useWaterMaterialFactory()
+  const waterMaterialFactory = useWaterMaterialFactory()
 
-  // 水面材质替换：useLayoutEffect 在浏览器绘制前执行，避免首帧闪现原材质。
-  // water_l / water_r 各自独立实例化 WaterMaterial（同 shader、同 HDR 纹理）。
-  // 卸载时恢复 GLB 原材质；仅释放新创建的 ShaderMaterial，不销毁可能共享的 GLB 材质。
-  // 若其他逻辑已再次替换材质（mesh.material !== 我们创建的实例），清理时不覆盖。
   useLayoutEffect(() => {
-    const waterMeshes = ['water_l', 'water_r']
-      .map((name) => scene.getObjectByName(name))
-      .filter((obj): obj is THREE.Mesh => obj instanceof THREE.Mesh)
-
-    const originals = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>()
-    const created: THREE.ShaderMaterial[] = []
-
-    for (const mesh of waterMeshes) {
-      originals.set(mesh, mesh.material)
-      const mat = waterFactory.create()
-      created.push(mat)
-      mesh.material = mat
+    const replacements: { mesh: THREE.Mesh; originalMaterial: THREE.Material | THREE.Material[]; waterMaterial: THREE.ShaderMaterial }[] = []
+    for (const name of WATER_NODE_NAMES) {
+      const object = scene.getObjectByName(name)
+      if (!(object instanceof THREE.Mesh)) continue
+      const waterMaterial = waterMaterialFactory.create()
+      replacements.push({
+        mesh: object,
+        originalMaterial: object.material,
+        waterMaterial,
+      })
+      object.material = waterMaterial
     }
-
     return () => {
-      for (const mesh of waterMeshes) {
-        const current = mesh.material
-        // 仅当当前材质仍是我们创建的实例时才恢复，避免覆盖其他逻辑的替换
-        if (current instanceof THREE.ShaderMaterial && created.includes(current)) {
-          const original = originals.get(mesh)
-          if (original !== undefined) mesh.material = original
+      for (const { mesh, originalMaterial, waterMaterial } of replacements) {
+        if (mesh.material === waterMaterial) {
+          mesh.material = originalMaterial
         }
+        waterMaterial.dispose()
       }
-      for (const mat of created) mat.dispose()
     }
-  }, [scene, waterFactory])
+  }, [scene, waterMaterialFactory])
 
   // 整体缩放：竖屏 0.75 / 横屏 1，外层 group 以此为锚点缩放（含 tap 按钮）
   const groupRef = useRef<THREE.Group>(null!)
