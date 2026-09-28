@@ -4,9 +4,6 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <title>大同的技术分享</title>
   </head>
   <body>
@@ -33,23 +30,5 @@
       >
     </footer>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- 版本检测：拉取最新 index.html，比对 JS hash，不一致则强制刷新（解决移动端缓存顽固问题） -->
-    <script>
-      (function () {
-        try {
-          var currentScript = document.querySelector('script[type="module"]').src;
-          fetch('/?v=' + Date.now(), { cache: 'no-store' })
-            .then(function (r) { return r.text(); })
-            .then(function (html) {
-              var match = html.match(/src="([^"]*index-[^"]+\.js)"/);
-              if (match && currentScript.indexOf(match[1]) === -1) {
-                // 用带时间戳的 URL 强制绕过浏览器缓存，确保拿到最新 index.html
-                window.location.replace(window.location.pathname + '?r=' + Date.now());
-              }
-            })
-            .catch(function () {});
-        } catch (e) {}
-      })();
-    </script>
   </body>
 </html>
