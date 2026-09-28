@@ -3,6 +3,7 @@ import { useLoader } from '@react-three/fiber'
 import { Image } from '@react-three/uikit'
 import { Card, Button } from '@react-three/uikit-default'
 import * as THREE from 'three'
+import { versionedUrl } from '../../utils/asset'
 
 // LiteGameScreen：heart altar → game 路由的内容区子屏。
 // 纵向 3 行游戏选择列表（每页容量 3 个，超出后接翻页）。
@@ -28,7 +29,7 @@ export const GAMES: GameItem[] = [
   {
     id: 'defend_troy',
     name: 'DefendTroy',
-    image: '/assets/textures/game_def_troy.png',
+    image: versionedUrl('/assets/textures/game_def_troy.png'),
     url: 'https://svalbardpost.xyz/games/defend-troy/',
   },
 ]

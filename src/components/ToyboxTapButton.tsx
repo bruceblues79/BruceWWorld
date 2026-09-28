@@ -3,6 +3,7 @@ import { Text } from '@react-three/uikit'
 import { Button } from '@react-three/uikit-default'
 import * as THREE from 'three'
 import type { Vector3Tuple } from 'three'
+import { versionedUrl } from '../utils/asset'
 
 // toybox 开盒场景的悬浮点击按钮：
 // - 直接使用 @react-three/uikit-default 的 Button（ghost variant）
@@ -14,7 +15,7 @@ import type { Vector3Tuple } from 'three'
 //   up 时若仍在按钮上则触发 onClick，不依赖浏览器 click 派发
 
 // 字体资产由 scripts 流程离线生成；加字时需同步扩 TTF 子集与该 JSON（见 memory/脚本）
-const MSDF_JSON_URL = '/assets/fonts/uikit_cn.msdf.json'
+const MSDF_JSON_URL = versionedUrl('/assets/fonts/uikit_cn.msdf.json')
 const FONT_FAMILIES = { default: { normal: MSDF_JSON_URL } }
 
 // 面板世界尺寸：与原 PanelCommButton（scaleX/Y 0.4×0.2）一致
