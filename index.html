@@ -43,7 +43,8 @@
             .then(function (html) {
               var match = html.match(/src="([^"]*index-[^"]+\.js)"/);
               if (match && currentScript.indexOf(match[1]) === -1) {
-                location.reload();
+                // 用带时间戳的 URL 强制绕过浏览器缓存，确保拿到最新 index.html
+                window.location.replace(window.location.pathname + '?r=' + Date.now());
               }
             })
             .catch(function () {});
