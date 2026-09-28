@@ -26,15 +26,15 @@ const ROTATE_TURN = -Math.PI / 2 // root_rotate 再绕局部 y 转 -90°
 const PAUSE_SECONDS = 0.3 // 段间停顿
 const EASE = 'power2.inOut'
 
-// 开盒后挂载次级按钮的三个祭坛节点（与 public/assets/textures 下 PNG 一一对应）。
-// altar 字段是 AltarName（box/heart/person），用于 AltarScreen 路由到对应 banner。
+// 开盒后挂载次级按钮的三个祭坛节点（与 public/assets/svg 下 SVG 一一对应）。
+// altar 字段是 AltarName（box/heart/person），用于 AltarScreen 路由到对应页眉文字。
 const ALTAR_NODES = [
-  { name: 'altar_heart', image: versionedUrl('/assets/textures/altar_heart.png'), altar: 'heart' as AltarName },
-  { name: 'altar_person', image: versionedUrl('/assets/textures/altar_person.png'), altar: 'person' as AltarName },
-  { name: 'altar_box', image: versionedUrl('/assets/textures/altar_box.png'), altar: 'box' as AltarName },
+  { name: 'altar_heart', image: versionedUrl('/assets/svg/altar_heart.svg'), altar: 'heart' as AltarName },
+  { name: 'altar_person', image: versionedUrl('/assets/svg/altar_person.svg'), altar: 'person' as AltarName },
+  { name: 'altar_box', image: versionedUrl('/assets/svg/altar_box.svg'), altar: 'box' as AltarName },
 ] as const
 
-// 模块加载时即预热三张 altar PNG 纹理（进入 R3F 的 useLoader 缓存）：
+// 模块加载时即预热三张 altar SVG 纹理（进入 R3F 的 useLoader 缓存）：
 // StartSpace 一旦 import 本模块，请求即开始，与 GLB/HDR 并行；
 // AltarButton 内 useLoader 命中缓存直接返回纹理，不再挂起 Suspense
 for (const { image } of ALTAR_NODES) {

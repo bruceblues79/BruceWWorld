@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useLoader } from '@react-three/fiber'
-import { Image } from '@react-three/uikit'
+import { Image, Text } from '@react-three/uikit'
 import { Card, CardContent, CardFooter, Button } from '@react-three/uikit-default'
 import { Billboard } from '@react-three/drei'
 import * as THREE from 'three'
@@ -15,10 +15,10 @@ import { versionedUrl } from '../utils/asset'
 // [0, 1, -1.75]，介于相机与 toybox 之间。外层 drei Billboard 始终朝向相机，
 // 保证 OrbitControls 环绕时面板始终可见可读。
 //
-// 路由：根据 altarName（box / heart / person）从三张 banner 纹理中取对应一张，
-// 显示在信息区顶部作为 title 条（banner 比例 8:1，显示尺寸 600×75px 不变形）。
-// box → banner_xr → XRTechScreen、heart → banner_game → LiteGameScreen、
-// person → banner_me → AboutMeScreen。
+// 路由：根据 altarName（box / heart / person）取对应页眉文字，
+// 显示在信息区顶部作为 title 条（600×75px，暖色金黄居中）。
+// box → technical → XRTechScreen、heart → games → LiteGameScreen、
+// person → about → AboutMeScreen。
 //
 // 显隐：组件初始挂载且默认不可见（scale 0），由父组件通过 altarName prop 控制。
 // altarName 非 null 时显示（true→false 即时归零；false→true 时 gsap scale
@@ -26,7 +26,7 @@ import { versionedUrl } from '../utils/asset'
 // 不走条件渲染。
 //
 // 布局：纵向分 5，上 4/5 为信息区，下 1/5 为操作行。信息区内部分两段：
-// 顶部 banner 条（600×75px，保持 8:1 比例不变形）+ 剩余内容区。
+// 顶部页眉文字条（600×75px，暖色金黄居中）+ 剩余内容区。
 // 内容区外包一层 Card（borderRadius=0 直角边框、borderWidth=2、半透明白底）
 // 作为「不带圆角的线」提供划分感，内部按路由渲染对应子屏组件：
 //   - XRTechScreen（xr 作品，空占位）
@@ -63,7 +63,7 @@ const PIXEL_SIZE = 0.001
 // 操作行高度 = 1/5 面板高；操作按钮正方，略小于行高留间距
 const OP_ROW_HEIGHT = PANEL_HEIGHT / 5
 const OP_BUTTON_SIZE = OP_ROW_HEIGHT - 20
-// banner 条高度：保持 512×64 源图 8:1 比例不变形，宽 = 面板宽 600px
+// 页眉条高度：600×75px（原 banner 8:1 比例，现用于容纳居中文字）
 const BANNER_HEIGHT = PANEL_WIDTH / 8
 // 按压缩放（与 AltarButton 一致：直 ref 操作，无过渡）
 const PRESS_SCALE = 0.95
@@ -74,28 +74,28 @@ const POP_EASE = 'power2.out'
 
 // 底部操作按钮图标与回调配置（顺序：上一页 / 下一页 / 确定 / 返回）
 const OP_BUTTON_TEXTURES = [
-  versionedUrl('/assets/textures/btn_prev.png'),
-  versionedUrl('/assets/textures/btn_next.png'),
-  versionedUrl('/assets/textures/btn_conform.png'),
-  versionedUrl('/assets/textures/btn_back.png'),
+  versionedUrl('/assets/svg/btn_prev.svg'),
+  versionedUrl('/assets/svg/btn_next.svg'),
+  versionedUrl('/assets/svg/btn_conform.svg'),
+  versionedUrl('/assets/svg/btn_back.svg'),
 ] as const
 
-// 路由表：altarName → banner 纹理 URL
-// box → banner_xr、heart → banner_game、person → banner_me
-const BANNER_BY_ALTAR = {
-  box: versionedUrl('/assets/textures/banner_xr.png'),
-  heart: versionedUrl('/assets/textures/banner_game.png'),
-  person: versionedUrl('/assets/textures/banner_me.png'),
+// 路由表：altarName → 页眉文字（全大写）
+// box → TECHNICAL、heart → GAMES、person → ABOUT
+const HEADER_TEXT_BY_ALTAR = {
+  box: 'TECHNICAL',
+  heart: 'GAMES',
+  person: 'ABOUT',
 } as const
 
-// 模块加载时即预热四张操作按钮 PNG + 三张 banner 纹理（与 Toybox 的
-// altar PNG 预热同模式）：StartSpace 一旦 import 本模块，请求即开始，
+// 页眉文字颜色（金色 #ffcf40，HSV 45°/75%/100%，与 SVG 图标染色一致）
+const HEADER_COLOR = '#ffcf40'
+
+// 模块加载时即预热四张操作按钮 SVG 纹理（与 Toybox 的
+// altar SVG 预热同模式）：StartSpace 一旦 import 本模块，请求即开始，
 // 与 GLB/HDR/altar 纹理并行；组件内 useLoader 命中缓存直接返回纹理，
 // 不挂起 Suspense
 for (const url of OP_BUTTON_TEXTURES) {
-  useLoader.preload(THREE.TextureLoader, url)
-}
-for (const url of Object.values(BANNER_BY_ALTAR)) {
   useLoader.preload(THREE.TextureLoader, url)
 }
 
@@ -225,10 +225,6 @@ function AltarScreenInner({
   const texNext = useLoader(THREE.TextureLoader, OP_BUTTON_TEXTURES[1])
   const texConform = useLoader(THREE.TextureLoader, OP_BUTTON_TEXTURES[2])
   const texBack = useLoader(THREE.TextureLoader, OP_BUTTON_TEXTURES[3])
-  // 三张 banner 纹理同样走 R3F 缓存（已模块级 preload 预热），按 altarName 路由
-  const texBannerXr = useLoader(THREE.TextureLoader, BANNER_BY_ALTAR.box)
-  const texBannerGame = useLoader(THREE.TextureLoader, BANNER_BY_ALTAR.heart)
-  const texBannerMe = useLoader(THREE.TextureLoader, BANNER_BY_ALTAR.person)
   // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
   texPrev.colorSpace = THREE.SRGBColorSpace
   // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
@@ -245,28 +241,9 @@ function AltarScreenInner({
   texBack.colorSpace = THREE.SRGBColorSpace
   // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
   texBack.matrixAutoUpdate = false
-  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
-  texBannerXr.colorSpace = THREE.SRGBColorSpace
-  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
-  texBannerXr.matrixAutoUpdate = false
-  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
-  texBannerGame.colorSpace = THREE.SRGBColorSpace
-  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
-  texBannerGame.matrixAutoUpdate = false
-  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
-  texBannerMe.colorSpace = THREE.SRGBColorSpace
-  // oxlint-disable-next-line react/immutability -- three Texture 只能原地修改属性
-  texBannerMe.matrixAutoUpdate = false
   const textures = [texPrev, texNext, texConform, texBack]
-  // 按 altarName 路由到对应 banner 纹理；altarName 为 null 时不渲染 Image
-  const bannerTexture =
-    altarName === 'box'
-      ? texBannerXr
-      : altarName === 'heart'
-        ? texBannerGame
-        : altarName === 'person'
-          ? texBannerMe
-          : null
+  // 按 altarName 路由到对应页眉文字；altarName 为 null 时不渲染 Text
+  const headerText = altarName ? HEADER_TEXT_BY_ALTAR[altarName] : null
 
   // 操作行按钮回调（顺序：上一页 / 下一页 / 确定 / 返回）。
   // 「确定」仅在 game 路由且有选中游戏时生效：原地跳转到游戏 url（卸载主站、释放 WebGL context）。
@@ -311,10 +288,9 @@ function AltarScreenInner({
             paddingRight={0}
           >
             {/* 信息区（上 4/5）。CardContent 自带 flexDirection=column 主题默认值，
-                内部纵向分两段：顶部 banner 条（600×75px 保持 8:1 不变形）+
-                内容区框架。banner 仅在 visible 时渲染——altarName 为 null 时
-                bannerTexture 为 null，uikit Image 拿到 null texture 会报错；
-                同时面板整体 scale=0 不可见，省略 banner 无视觉影响。 */}
+                内部纵向分两段：顶部页眉文字条（600×75px，暖色金黄居中）+
+                内容区框架。页眉仅在 visible 时渲染——altarName 为 null 时
+                headerText 为 null；同时面板整体 scale=0 不可见，省略无视觉影响。 */}
             <CardContent
               height={PANEL_HEIGHT - OP_ROW_HEIGHT}
               paddingTop={0}
@@ -323,17 +299,29 @@ function AltarScreenInner({
               paddingRight={0}
               flexDirection="column"
             >
-              {visible && bannerTexture && (
-                <Image
-                  src={bannerTexture}
-                  width="100%"
+              {visible && headerText && (
+                <Card
                   height={BANNER_HEIGHT}
-                  objectFit="cover"
-                />
+                  width="100%"
+                  flexDirection="row"
+                  alignItems="center"
+                  justifyContent="center"
+                  borderRadius={0}
+                  borderWidth={0}
+                  backgroundColor="rgba(0, 0, 0, 0)"
+                  paddingTop={0}
+                  paddingBottom={0}
+                  paddingLeft={0}
+                  paddingRight={0}
+                >
+                  <Text fontSize={40} color={HEADER_COLOR}>
+                    {headerText}
+                  </Text>
+                </Card>
               )}
               {/* 内容区框架：Card 默认 borderRadius.lg，这里覆盖为 0 得到直角边框，
-                  作为「不带圆角的线」划分 banner 与内容区、内容区与操作行。
-                  flexGrow=1 填满 banner 之外的信息区高度（≈565px）。 */}
+                  作为「不带圆角的线」划分页眉与内容区、内容区与操作行。
+                  flexGrow=1 填满页眉之外的信息区高度（≈565px）。 */}
               {visible && (
                 <Card
                   flexGrow={1}
