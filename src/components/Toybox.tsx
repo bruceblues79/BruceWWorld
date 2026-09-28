@@ -8,8 +8,9 @@ import AltarButton from './AltarButton'
 import { type AltarName } from './AltarScreen'
 import type { Vector3Tuple } from 'three'
 import { useWaterMaterialFactory } from './WaterMaterial'
+import { versionedUrl } from '../utils/asset'
 
-const MODEL_URL = '/assets/glb/toybox.glb'
+const MODEL_URL = versionedUrl('/assets/glb/toybox.glb')
 // 整个 toybox + tap 按钮的「世界锚点」
 const MODEL_POSITION: [number, number, number] = [0, 0.3, -2]
 // tap 面板在 toybox 局部坐标中的偏移，与模型保持相对位置（相机旋转时随之一起运动）。
@@ -28,9 +29,9 @@ const EASE = 'power2.inOut'
 // 开盒后挂载次级按钮的三个祭坛节点（与 public/assets/textures 下 PNG 一一对应）。
 // altar 字段是 AltarName（box/heart/person），用于 AltarScreen 路由到对应 banner。
 const ALTAR_NODES = [
-  { name: 'altar_heart', image: '/assets/textures/altar_heart.png', altar: 'heart' as AltarName },
-  { name: 'altar_person', image: '/assets/textures/altar_person.png', altar: 'person' as AltarName },
-  { name: 'altar_box', image: '/assets/textures/altar_box.png', altar: 'box' as AltarName },
+  { name: 'altar_heart', image: versionedUrl('/assets/textures/altar_heart.png'), altar: 'heart' as AltarName },
+  { name: 'altar_person', image: versionedUrl('/assets/textures/altar_person.png'), altar: 'person' as AltarName },
+  { name: 'altar_box', image: versionedUrl('/assets/textures/altar_box.png'), altar: 'box' as AltarName },
 ] as const
 
 // 模块加载时即预热三张 altar PNG 纹理（进入 R3F 的 useLoader 缓存）：

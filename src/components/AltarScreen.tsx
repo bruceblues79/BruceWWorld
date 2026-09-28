@@ -9,6 +9,7 @@ import type { Vector3Tuple } from 'three'
 import XRTechScreen from './screens/XRTechScreen'
 import AboutMeScreen from './screens/AboutMeScreen'
 import LiteGameScreen, { GAMES } from './screens/LiteGameScreen'
+import { versionedUrl } from '../utils/asset'
 
 // AltarScreen：祭坛场景的悬浮内容面板，固定挂载在 starter canvas 世界坐标
 // [0, 1, -1.75]，介于相机与 toybox 之间。外层 drei Billboard 始终朝向相机，
@@ -73,18 +74,18 @@ const POP_EASE = 'power2.out'
 
 // 底部操作按钮图标与回调配置（顺序：上一页 / 下一页 / 确定 / 返回）
 const OP_BUTTON_TEXTURES = [
-  '/assets/textures/btn_prev.png',
-  '/assets/textures/btn_next.png',
-  '/assets/textures/btn_conform.png',
-  '/assets/textures/btn_back.png',
+  versionedUrl('/assets/textures/btn_prev.png'),
+  versionedUrl('/assets/textures/btn_next.png'),
+  versionedUrl('/assets/textures/btn_conform.png'),
+  versionedUrl('/assets/textures/btn_back.png'),
 ] as const
 
 // 路由表：altarName → banner 纹理 URL
 // box → banner_xr、heart → banner_game、person → banner_me
 const BANNER_BY_ALTAR = {
-  box: '/assets/textures/banner_xr.png',
-  heart: '/assets/textures/banner_game.png',
-  person: '/assets/textures/banner_me.png',
+  box: versionedUrl('/assets/textures/banner_xr.png'),
+  heart: versionedUrl('/assets/textures/banner_game.png'),
+  person: versionedUrl('/assets/textures/banner_me.png'),
 } as const
 
 // 模块加载时即预热四张操作按钮 PNG + 三张 banner 纹理（与 Toybox 的

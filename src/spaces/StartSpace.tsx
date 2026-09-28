@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import Toybox, { type Phase } from '../components/Toybox'
 import StarterSpaceCamera from '../components/StarterSpaceCamera'
 import AltarScreen, { type AltarName } from '../components/AltarScreen'
+import { versionedUrl } from '../utils/asset'
 import './StartSpace.css'
 
 /** 程序化生成竖直渐变天空纹理：顶冷蓝 → 地平线暖 → 底暖沙 */
@@ -174,7 +175,7 @@ function StartSpace() {
             onTapStart={() => setPhase('opening')}
             onOpened={() => setPhase('opened')}
           />
-          <Environment files="/assets/hdr/starter_space.hdr" />
+          <Environment files={versionedUrl('/assets/hdr/starter_space.hdr')} />
         </Suspense>
       </Canvas>
       {/* 主题字：仅 StartSpace（首页）显示，其他平行 space 不渲染。

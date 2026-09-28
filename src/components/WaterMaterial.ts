@@ -8,8 +8,9 @@ import { useMemo } from 'react'
 import { useLoader } from '@react-three/fiber'
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js'
 import * as THREE from 'three'
+import { versionedUrl } from '../utils/asset'
 
-const HDR_URL = '/assets/hdr/starter_space.hdr'
+const HDR_URL = versionedUrl('/assets/hdr/starter_space.hdr')
 
 // 模块加载时即预热 HDR 纹理（进入 R3F useLoader 缓存），与 GLB/Environment 并发，
 // 同时避免与 drei <Environment> 对同一 URL 的请求竞态导致 ERR_ABORTED
