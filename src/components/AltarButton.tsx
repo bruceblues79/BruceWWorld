@@ -29,7 +29,7 @@ const PRESS_SCALE = 0.95
 
 export type AltarButtonProps = {
   position: Vector3Tuple
-  /** 图标纹理 URL，如 /assets/textures/altar_heart.png */
+  /** 图标纹理 URL，如 /assets/svg/altar_heart.svg */
   imageSrc: string
   onClick?: () => void
 }
