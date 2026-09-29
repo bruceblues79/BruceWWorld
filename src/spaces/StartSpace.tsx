@@ -155,15 +155,15 @@ function StartSpace() {
           intensity={4}
           color="#fff1df"
           castShadow
-          shadow-mapSize={[1024, 1024]}
+          shadow-mapSize={[2048, 2048]}
           shadow-camera-near={0.5}
           shadow-camera-far={20}
-          shadow-camera-left={-2.5}
-          shadow-camera-right={2.5}
-          shadow-camera-top={2.5}
-          shadow-camera-bottom={-2.5}
-          shadow-bias={-0.0001}
-          shadow-normalBias={0.005}
+          shadow-camera-left={-1.8}
+          shadow-camera-right={1.8}
+          shadow-camera-top={1.8}
+          shadow-camera-bottom={-1.8}
+          shadow-bias={-0.0005}
+          shadow-normalBias={0.02}
         />
         <AltarScreen position={[0, 1, -1.75]} altarName={currentAltar} onClose={closeAltarScreen} />
         <Suspense fallback={null}>
