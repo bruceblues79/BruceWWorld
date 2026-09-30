@@ -152,7 +152,7 @@ function StartSpace() {
         <directionalLight
           ref={lightRef}
           position={[2, 6, 3]}
-          intensity={4}
+          intensity={3.14}
           color="#fff1df"
           castShadow
           shadow-mapSize={[2048, 2048]}
@@ -177,7 +177,7 @@ function StartSpace() {
           />
           <Environment
             files={versionedUrl('/assets/hdr/starter_space.hdr')}
-            environmentIntensity={0.6}
+            environmentIntensity={0.7}
           />
         </Suspense>
       </Canvas>
