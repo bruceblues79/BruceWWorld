@@ -184,7 +184,7 @@ function StartSpace() {
           />
           <Environment
             files={versionedUrl('/assets/hdr/starter_space.hdr')}
-            environmentIntensity={0.5}
+            environmentIntensity={0.7}
           />
         </Suspense>
       </Canvas>
