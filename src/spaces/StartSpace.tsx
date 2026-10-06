@@ -150,7 +150,14 @@ function StartSpace() {
         <StarterSpaceCamera enabled={phase !== 'opening'} />
         <SceneBackground />
         <directionalLight
-          ref={lightRef}
+          ref={(l) => {
+            lightRef.current = l!
+            if (l) {
+              l.target.position.set(0, 0.3, -2)
+              l.target.updateMatrixWorld()
+              l.parent?.add(l.target)
+            }
+          }}
           position={[2, 6, 3]}
           intensity={3.14}
           color="#fff1df"
@@ -158,10 +165,10 @@ function StartSpace() {
           shadow-mapSize={[2048, 2048]}
           shadow-camera-near={0.5}
           shadow-camera-far={20}
-          shadow-camera-left={-1.8}
-          shadow-camera-right={1.8}
-          shadow-camera-top={1.8}
-          shadow-camera-bottom={-1.8}
+          shadow-camera-left={-2}
+          shadow-camera-right={2}
+          shadow-camera-top={3.5}
+          shadow-camera-bottom={-0.5}
           shadow-bias={-0.0005}
           shadow-normalBias={0.02}
         />
