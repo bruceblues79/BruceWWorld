@@ -36,18 +36,15 @@ body,
   height: 100%;
 }
 
-/* body 渐变与 scene.background 天空同色标：canvas 首帧前防闪白 */
+/* body 渐变 = 唯一天空真值：AR 模式下画布透明直通，加载与加载后同一渐变，无突变 */
 body {
   margin: 0;
   overflow: hidden;
   background: linear-gradient(
     to bottom,
-    #3a5f7e 0%,
-    #7798b8 25%,
-    #a3b8c5 45%,
-    #a8b9b9 55%,
-    #5a87a4 70%,
-    #1f4769 100%
+    #5c9ef2 0%,
+    #d9ebfa 50%,
+    #294770 100%
   );
 }
 

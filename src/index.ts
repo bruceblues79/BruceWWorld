@@ -9,23 +9,21 @@ import { World, AssetManager } from '@iwsdk/core';
 import projectOptions from 'virtual:iwsdk-project';
 import { AltarScreenSystem } from './altar-screen-system.js';
 import { BillboardSystem } from './billboard-system.js';
-import { ShadowSupportSystem } from './shadow-support.js';
-import { SkyBackgroundSystem } from './sky-background.js';
 import { StartCameraSystem } from './start-camera.js';
 import { ToyboxSystem } from './toybox-system.js';
+import { installXRButton } from './xr-button.js';
 import './index.css';
 
 World.create(
   document.getElementById('scene-container') as HTMLDivElement,
   projectOptions,
 ).then((world) => {
-  world.registerSystem(ShadowSupportSystem);
-  world.registerSystem(SkyBackgroundSystem);
   world.registerSystem(StartCameraSystem);
   world.registerSystem(ToyboxSystem);
   world.registerSystem(AltarScreenSystem);
   // UI 层：排在相机系统之后，使 billboard 使用本帧视点
   world.registerSystem(BillboardSystem, { priority: 30 });
+  installXRButton(world);
 
   // 资产加载完成后移除初始加载层
   document.getElementById('initial-loading')?.remove();
