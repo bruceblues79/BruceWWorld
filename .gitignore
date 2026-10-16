@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output（本地构建后由 deploy 脚本直接上传，不入库）
+dist/
+
+# IWSDK 本地开发产物（https 证书 + runtime 运行态）
+.iwsdk/
+
+# 编辑器 / Agent 本地配置（由 iwsdk adapter sync 生成，含机器绝对路径）
+.vscode/
+.cursor/
+.claude/
+.agents/
+.codex/
+.mcp.json
+opencode.json
+
+# 环境变量与日志
+.env
+.env.local
+.env.*.local
+*.log
+
+# 操作系统垃圾文件
+.DS_Store
+Thumbs.db

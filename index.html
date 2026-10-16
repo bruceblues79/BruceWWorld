@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>大同的技术分享</title>
+  </head>
+  <body>
+    <div id="scene-container"></div>
+    <!-- 初始加载层：JS bundle 下载执行前即显示，World 就绪后由 src/index.ts 移除。
+         与备案同层（HTML 解析即渲染），确保白屏阶段有反馈 -->
+    <div id="initial-loading" aria-live="polite">
+      <div class="initial-loading-title">大同的技术分享</div>
+      <div class="initial-loading-text">加载中<span class="initial-loading-dots"></span></div>
+    </div>
+    <!-- 备案号：站点级全局悬挂。合规不可退化（deploy 校验项），禁止删除 -->
+    <footer class="site-beian">
+      <a
+        href="https://beian.miit.gov.cn/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >京ICP备2026056959号-1</a
+      >
+      <a
+        href="https://beian.mps.gov.cn/#/query/webSearch?code=11010502062826"
+        target="_blank"
+        rel="noopener noreferrer"
+        >京公网安备11010502062826号</a
+      >
+    </footer>
+    <!-- 主题字：原 StartSpace 内按需渲染，现阶段无 3D 对象，固定悬挂于 DOM 外壳 -->
+    <div class="start-theme-title">大同的技术分享</div>
+    <script type="module" src="/src/index.ts"></script>
+  </body>
+</html>

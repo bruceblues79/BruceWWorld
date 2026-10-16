@@ -1,0 +1,165 @@
+:root {
+  color-scheme: light;
+  --ink: #4a2f15;
+  --ink-muted: rgba(74, 47, 21, 0.62);
+  --glass: rgba(255, 252, 246, 0.78);
+  --glass-strong: rgba(255, 252, 246, 0.94);
+  --accent: #d85a30;
+  --font-ui: system-ui, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei',
+    sans-serif;
+
+  font: 16px/1.5 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 全局压制移动端长按默认行为（应用到所有元素兜底，确保命中真正的 touch target）：
+   - tap-highlight: 移除点击/长按时浏览器的蓝色高亮闪烁
+   - touch-action: none 阻止浏览器长按手势识别——超过系统阈值会派发 pointercancel
+     抢断 pointerup，导致长按松开后 click 不触发；本站 canvas 全屏占满视口，
+     原生滚动/缩放手势本就不需要，故全局禁用 */
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
+html,
+body,
+#scene-container {
+  height: 100%;
+}
+
+/* body 渐变与 scene.background 天空同色标：canvas 首帧前防闪白 */
+body {
+  margin: 0;
+  overflow: hidden;
+  background: linear-gradient(
+    to bottom,
+    #3a5f7e 0%,
+    #7798b8 25%,
+    #a3b8c5 45%,
+    #a8b9b9 55%,
+    #5a87a4 70%,
+    #1f4769 100%
+  );
+}
+
+#scene-container canvas {
+  display: block;
+  /* 干掉 iOS 长按呼出的 copy/look-up 菜单，防止文本选择高亮 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button {
+  font: inherit;
+}
+
+/* 备案号页脚：站点外壳元素，固定在视口底部悬挂 ICP + 公安备案号并链接对应官网。
+   z-index 30 位于主题字(25)之上、加载遮罩(50)之下 */
+.site-beian {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px 18px;
+  padding: 6px 16px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.site-beian a {
+  color: rgba(255, 247, 232, 0.5);
+  text-decoration: none;
+  text-shadow: 0 1px 6px rgba(12, 24, 40, 0.55);
+  pointer-events: auto;
+}
+
+.site-beian a:hover {
+  color: rgba(255, 247, 232, 0.92);
+  text-decoration: underline;
+}
+
+/* 初始加载层：与备案同层（HTML 解析即渲染），JS bundle 加载前即显示。
+   居中两行字：标题 + 加载中。World 就绪后由 src/index.ts 移除。
+   z-index 50 最高层，pointer-events: none 不挡交互 */
+#initial-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.initial-loading-title {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: clamp(18px, 2.6vw, 30px);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: rgba(255, 247, 232, 0.88);
+  text-shadow: 0 1px 10px rgba(20, 30, 50, 0.28);
+}
+
+.initial-loading-text {
+  font-size: 14px;
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+  color: rgba(255, 247, 232, 0.55);
+  text-shadow: 0 1px 6px rgba(20, 30, 50, 0.4);
+}
+
+/* 加载中后面的省略号动画：三个点依次出现 */
+.initial-loading-dots::after {
+  content: '';
+  display: inline-block;
+  width: 2.4em;
+  text-align: left;
+  animation: initial-dots 1.4s steps(4, end) infinite;
+}
+
+@keyframes initial-dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: ''; }
+}
+
+/* 主题字：fixed 定位 + z-index 25，位于备案(30)之下、loading(50)之下 */
+.start-theme-title {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 1.8vh;
+  z-index: 25;
+  pointer-events: none;
+  user-select: none;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: clamp(15px, 1.575vw, 20px);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: rgba(255, 247, 232, 0.55);
+  text-shadow: 0 1px 10px rgba(20, 30, 50, 0.28);
+}

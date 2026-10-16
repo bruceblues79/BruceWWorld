@@ -1,0 +1,92 @@
+<style>
+  .altar-screen {
+    display: flex;
+    flex-direction: column;
+    width: 60;
+    height: 80;
+    border-radius: 2.4;
+    border-width: 0.8;
+    border-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .screen-body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    flex-grow: 1;
+  }
+
+  .screen-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 7.5;
+  }
+
+  .screen-header-text {
+    display: none;
+    font-size: 4;
+    color: #ffcf40;
+  }
+
+  .screen-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    flex-grow: 1;
+    border-width: 0.4;
+    border-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.08);
+    padding-top: 1.6;
+    padding-bottom: 1.6;
+    padding-left: 1.6;
+    padding-right: 1.6;
+  }
+
+  .screen-ops {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    height: 16;
+    padding-left: 1;
+    padding-right: 1;
+    gap-column: 0.8;
+  }
+
+  .op-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    height: 14;
+    border-radius: 1.6;
+    border-width: 0.4;
+    border-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .op-icon {
+    width: 80%;
+    height: 80%;
+  }
+</style>
+
+<Panel class="altar-screen">
+  <div class="screen-body">
+    <div class="screen-header">
+      <span id="HeaderTech" class="screen-header-text">TECHNICAL</span>
+      <span id="HeaderGames" class="screen-header-text">GAMES</span>
+      <span id="HeaderAbout" class="screen-header-text">ABOUT</span>
+    </div>
+    <div id="AltarContent" class="screen-content"></div>
+  </div>
+  <div class="screen-ops">
+    <button id="OpPrev" class="op-button"><img class="op-icon" src="textures/btn_prev.svg" /></button>
+    <button id="OpNext" class="op-button"><img class="op-icon" src="textures/btn_next.svg" /></button>
+    <button id="OpConfirm" class="op-button"><img class="op-icon" src="textures/btn_conform.svg" /></button>
+    <button id="OpClose" class="op-button"><img class="op-icon" src="textures/btn_back.svg" /></button>
+  </div>
+</Panel>
