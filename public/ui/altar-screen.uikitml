@@ -4,6 +4,9 @@
     flex-direction: column;
     width: 60;
     height: 80;
+    border-radius: 8;
+    panel-material-class: glass;
+    background-color: #ffffffaa;
   }
 
   .screen-body {
