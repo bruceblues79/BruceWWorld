@@ -31,6 +31,14 @@
     </footer>
     <!-- 主题字：原 StartSpace 内按需渲染，现阶段无 3D 对象，固定悬挂于 DOM 外壳 -->
     <div class="start-theme-title">大同的技术分享</div>
+    <!-- Service Worker 注册：导航请求 network-first，浏览器无视缓存头时刷新仍能拿到最新 -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
     <script type="module" src="/src/index.ts"></script>
   </body>
 </html>
