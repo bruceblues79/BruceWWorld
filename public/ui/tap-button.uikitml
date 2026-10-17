@@ -3,17 +3,12 @@
     display: flex;
     width: 40;
     height: 20;
-    border-radius: 24;
-    border-width: 0.8;
-    border-color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.3);
     align-items: center;
     justify-content: center;
   }
 
   .tap-text {
     font-size: 7;
-    color: #ffffff;
   }
 </style>
 
