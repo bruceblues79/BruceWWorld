@@ -13,6 +13,7 @@ dist/
 .claude/
 .agents/
 .codex/
+.trae/
 .mcp.json
 opencode.json
 

@@ -4,26 +4,32 @@
   "components": {
     "com.iwsdk.components.IBLTexture": {
       "src": "starter-space.hdr",
-      "intensity": 1
+      "intensity": 1.2
     }
   },
   "resources": {},
+  "environment": {
+    "shadows": true,
+    "shadowMapType": "pcf-soft",
+    "toneMapping": "aces",
+    "exposure": 1.05
+  },
   "nodes": [
     {
       "id": "KeyLight",
       "transform": {
-        "position": [0, 4.3, -2],
-        "rotationDeg": [-75, 0, 0]
+        "position": [0, 5.75, -5.5],
+        "rotationDeg": [-55, -20, 0]
       },
       "components": {
         "com.iwsdk.components.DirectionalLight": {
-          "color": [1, 0.965, 0.929, 1],
-          "intensity": 1,
+          "color": [1, 0.94, 0.84, 1],
+          "intensity": 2.6,
           "castShadow": true,
           "shadowMapSize": "2048",
-          "shadowCameraSize": 6,
+          "shadowCameraSize": 12,
           "shadowBias": -0.0005,
-          "shadowNormalBias": 0.02
+          "shadowNormalBias": 0.008
         }
       }
     }
