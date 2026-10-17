@@ -11,12 +11,18 @@
  * 服务器上 games/ 等既有内容不受影响。
  */
 import { execSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 
 const HOST = 'root@111.229.101.32'
 const REMOTE_ROOT = '/var/www/html'
 const STAGE = '/tmp/svalbradpost-stage'
 const SITE = 'https://svalbardpost.xyz/'
+
+// 与兄弟项目 HarborDefender 同款约定：部署后交付带 ?v=<版本>-<UTC时间戳> 的
+// 访问地址，查询串变化即绕开浏览器/PWA 缓存，强刷直达最新
+const { version } = JSON.parse(
+  readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+)
 
 // 远端脚本统一经 stdin 传给 bash -s，避免本地 shell（cmd/PowerShell/Git Bash）引号转义差异
 const runRemote = (script) =>
@@ -67,4 +73,6 @@ for (const marker of ['京ICP备2026056959号-1', 'beian.miit.gov.cn', 'beian.mp
   if (!html.includes(marker)) throw new Error(`线上页面缺少 ${marker}`)
 }
 console.log(`  ${SITE} → HTTP ${res.status}，备案悬挂与页面结构齐全`)
+const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')
+console.log(`  访问地址（强刷直达最新）: ${SITE}?v=${version}-${stamp}`)
 console.log('部署完成')
