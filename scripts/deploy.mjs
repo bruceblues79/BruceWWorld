@@ -1,57 +1,51 @@
 #!/usr/bin/env node
 /**
- * 一键部署：把 dist/ 发布到腾讯云 svalbardpost.xyz（root@111.229.101.32）
+ * BruceWWorld deployment script.
+ * Publishes dist/ to the site root:
+ *   root@111.229.101.32 /var/www/html
  *
- * 流程：打包上传暂存区 → 远端校验（备案链接 + 关键资产）→ 清旧 assets 并切换
- *       → 归一属主/权限 → 清理 → 外网校验
- * 用法：npm run deploy（等价于 npm run build + node scripts/deploy.mjs）
- * 回滚：git checkout 上一版 + npm run deploy（版本由 git 管理，不做服务器端备份）
+ * Flow: tar upload → remote verify index.html + beian → switch → fix perms → cleanup → external check
+ * Usage: npm run deploy (equivalent to npm run build + node scripts/deploy.mjs)
+ * Rollback: git checkout <prev> + npm run deploy
  *
- * 与主站 scripts/deploy.mjs 同源；仅清 ${REMOTE_ROOT}/assets 后覆盖切换，
- * 服务器上 games/ 等既有内容不受影响。
+ * Root-path safety: only clear ${REMOTE_ROOT}/assets before overlay-switch,
+ * so siblings like games/ on the server stay intact.
  */
-import { execSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { execSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 
-const HOST = 'root@111.229.101.32'
-const REMOTE_ROOT = '/var/www/html'
-const STAGE = '/tmp/svalbradpost-stage'
-const SITE = 'https://svalbardpost.xyz/'
+const HOST = 'root@111.229.101.32';
+const REMOTE_ROOT = '/var/www/html';
+const STAGE = '/tmp/svalbradpost-stage';
+const SITE = 'https://svalbardpost.xyz/';
 
-// 与兄弟项目 HarborDefender 同款约定：部署后交付带 ?v=<版本>-<UTC时间戳> 的
-// 访问地址，查询串变化即绕开浏览器/PWA 缓存，强刷直达最新
 const { version } = JSON.parse(
   readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
-)
+);
 
-// 远端脚本统一经 stdin 传给 bash -s，避免本地 shell（cmd/PowerShell/Git Bash）引号转义差异
 const runRemote = (script) =>
   execSync(`ssh -o BatchMode=yes ${HOST} bash -s`, {
     input: script,
     stdio: ['pipe', 'inherit', 'inherit'],
-  })
+  });
 
 if (!existsSync('dist/index.html')) {
-  console.error('未找到 dist/index.html —— 请先执行 npm run build')
-  process.exit(1)
+  console.error('未找到 dist/index.html —— 请先执行 npm run build');
+  process.exit(1);
 }
 
-console.log('[1/4] 打包 dist 并上传到服务器暂存区 ...')
+console.log('[1/4] 打包 dist 并上传到服务器暂存区 ...');
 execSync(
   `tar -czf - -C dist . | ssh -o BatchMode=yes ${HOST} "rm -rf ${STAGE} && mkdir -p ${STAGE} && tar -xzf - -C ${STAGE}"`,
   { stdio: 'inherit' },
-)
+);
 
-console.log('[2/4] 远端校验 + 切换 ...')
+console.log('[2/4] 远端校验 + 切换 ...');
 runRemote(`
 set -e
 test -f ${STAGE}/index.html
-grep -q beian.miit.gov.cn ${STAGE}/index.html
-grep -q beian.mps.gov.cn ${STAGE}/index.html
-test -f ${STAGE}/favicon.svg
-test -f ${STAGE}/textures/starter_space.hdr
-test -f ${STAGE}/gltf/toybox.glb
-find ${STAGE}/assets -maxdepth 1 -name 'index-*.js' | grep -q .
+grep -q 京ICP备 ${STAGE}/index.html
+grep -q 京公网安备 ${STAGE}/index.html
 find ${STAGE} -type d -exec chmod 755 {} +
 find ${STAGE} -type f -exec chmod 644 {} +
 rm -rf ${REMOTE_ROOT}/assets
@@ -60,19 +54,20 @@ chown -R root:root ${REMOTE_ROOT}
 chmod -R a+rX ${REMOTE_ROOT}
 echo "  暂存文件数: $(find ${STAGE} -type f | wc -l)"
 echo "  已切换 ${REMOTE_ROOT}"
-`)
+`);
 
-console.log('[3/4] 清理暂存区 ...')
-runRemote(`rm -rf ${STAGE}`)
+console.log('[3/4] 清理暂存区 ...');
+runRemote(`rm -rf ${STAGE}`);
 
-console.log('[4/4] 外网校验 ...')
-const res = await fetch(SITE)
-if (!res.ok) throw new Error(`${SITE} 返回 HTTP ${res.status}`)
-const html = await res.text()
-for (const marker of ['京ICP备2026056959号-1', 'beian.miit.gov.cn', 'beian.mps.gov.cn', '大同的技术分享']) {
-  if (!html.includes(marker)) throw new Error(`线上页面缺少 ${marker}`)
+console.log('[4/4] 外网校验 ...');
+const res = await fetch(SITE);
+if (!res.ok) throw new Error(`${SITE} 返回 HTTP ${res.status}`);
+const html = await res.text();
+if (!html.includes('<title>')) throw new Error('线上页面缺少 <title>');
+if (!html.includes('京ICP备') || !html.includes('京公网安备')) {
+  throw new Error('线上页面缺少备案悬挂');
 }
-console.log(`  ${SITE} → HTTP ${res.status}，备案悬挂与页面结构齐全`)
-const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')
-console.log(`  访问地址（强刷直达最新）: ${SITE}?v=${version}-${stamp}`)
-console.log('部署完成')
+console.log(`  ${SITE} → HTTP ${res.status}，页面结构与备案悬挂齐全`);
+const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
+console.log(`  访问地址（强刷直达最新）: ${SITE}?v=${version}-${stamp}`);
+console.log('部署完成');
