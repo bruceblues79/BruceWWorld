@@ -5,8 +5,8 @@
     height: 20;
     align-items: center;
     justify-content: center;
-    panel-material-class: plastic;
-    background-color: #f5dc66;
+    panel-material-class: glass;
+    background-color: #ffffffaa;
   }
 
   .tap-text {
