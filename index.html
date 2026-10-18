@@ -31,6 +31,19 @@
     </footer>
     <!-- 主题字：原 StartSpace 内按需渲染，现阶段无 3D 对象，固定悬挂于 DOM 外壳 -->
     <div class="start-theme-title">大同的技术分享</div>
+    <!-- Service Worker 注册：导航请求 network-first，浏览器无视缓存头时刷新仍能拿到最新。
+         脚本 URL 带 query 版本号：内核曾把 sw.js 按 immutable 缓存一年、连更新检查
+         都命中旧副本，URL 一变即无缓存可命中，新 SW 必然回源安装。
+         updateViaCache:'none' 进一步确保脚本与 import 的更新不走 HTTP 缓存 -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/sw.js?v=4', { updateViaCache: 'none' })
+            .catch(() => {});
+        });
+      }
+    </script>
     <script type="module" src="/src/index.ts"></script>
   </body>
 </html>

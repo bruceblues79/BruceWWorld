@@ -14,6 +14,9 @@ import { ToyboxSystem } from './toybox-system.js';
 import { installXRButton } from './xr-button.js';
 import './index.css';
 
+// 版本可观测：强刷后打开控制台即可确认线上版本
+console.info(`BruceWWorld v${__APP_VERSION__}`);
+
 World.create(
   document.getElementById('scene-container') as HTMLDivElement,
   projectOptions,

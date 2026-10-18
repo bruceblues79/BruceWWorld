@@ -5,11 +5,31 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { iwsdkDev } from '@iwsdk/vite-plugin-dev';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
+
+const appVersion: string = (
+  JSON.parse(
+    readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf8'),
+  ) as { version: string }
+).version;
+
+/** 把版本号打进构建产物：index.html 注入 meta 标签，配合 define 供 JS 读取 */
+const versionStamp = (): Plugin => ({
+  name: 'app-version-stamp',
+  transformIndexHtml(html) {
+    return html.replace(
+      '</head>',
+      `    <meta name="app-version" content="${appVersion}" />\n  </head>`,
+    );
+  },
+});
 
 export default defineConfig({
-  plugins: [iwsdkDev()],
+  plugins: [iwsdkDev(), versionStamp()],
+  define: { __APP_VERSION__: JSON.stringify(appVersion) },
   server: { host: '0.0.0.0', port: 8081, open: false },
   build: {
     outDir: 'dist',
