@@ -47,6 +47,7 @@ export type AltarKindValue = (typeof AltarKind)[keyof typeof AltarKind];
 /**
  * 祭坛面板：route 是"当前打开哪个祭坛页"的唯一真值。
  * 面板显隐动画、页眉文字、三个祭坛按钮的隐藏/重显全部由它派生。
+ * gameIndex 是 GAMES 页当前选中槽位（点选写入，高亮与 Confirm 跳转由它派生）。
  */
 export const AltarScreen = createComponent('AltarScreen', {
   route: {
@@ -54,6 +55,11 @@ export const AltarScreen = createComponent('AltarScreen', {
     default: AltarRoute.None,
     enum: AltarRoute,
     label: 'Route',
+  },
+  gameIndex: {
+    type: Types.Int32,
+    default: 0,
+    label: 'Game Index',
   },
 });
 

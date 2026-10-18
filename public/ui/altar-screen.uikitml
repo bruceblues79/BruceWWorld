@@ -40,6 +40,41 @@
     padding-right: 1.6;
   }
 
+  .game-list {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: 100%;
+    flex-grow: 1;
+  }
+
+  .game-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 13;
+    margin-top: 2;
+    padding-left: 8;
+    padding-right: 8;
+    padding-top: 2.5;
+    padding-bottom: 2.5;
+    border-radius: 2;
+    border-width: 0.5;
+    border-color: #1e4e79;
+    background-color: #1e4e79;
+  }
+
+  .game-slot-hidden {
+    display: none;
+  }
+
+  .game-slot-text {
+    font-size: 3.5;
+    font-weight: 600;
+    color: #ffffff;
+  }
+
   .screen-ops {
     display: flex;
     flex-direction: row;
@@ -72,7 +107,13 @@
       <span id="HeaderGames" class="screen-header-text">GAMES</span>
       <span id="HeaderAbout" class="screen-header-text">ABOUT</span>
     </div>
-    <div id="AltarContent" class="screen-content"></div>
+    <div id="AltarContent" class="screen-content">
+      <div id="GameList" class="game-list">
+        <button id="GameSlot0" class="game-slot"><span class="game-slot-text">HARBOR DEFENDER</span></button>
+        <button id="GameSlot1" class="game-slot game-slot-hidden"><span class="game-slot-text">RESERVED</span></button>
+        <button id="GameSlot2" class="game-slot game-slot-hidden"><span class="game-slot-text">RESERVED</span></button>
+      </div>
+    </div>
   </div>
   <div class="screen-ops">
     <button id="OpPrev" class="op-button"><img class="op-icon" src="textures/btn_prev.svg" /></button>

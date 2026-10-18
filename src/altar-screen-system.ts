@@ -47,6 +47,27 @@ const OP_BUTTONS = [
   { assetId: 'btn-back', elementId: 'OpClose' },
 ] as const;
 
+/**
+ * GAMES 页槽位：元素 id 与跳转 URL 同序。槽位 1/2 预留（uikitml 中 display:none）。
+ * 列表严格从顶部开始堆叠（flex-start），单游戏也不例外。
+ * 接入新游戏：补 URL、在 uikitml 摘掉对应槽位的隐藏类。OpPrev/OpNext 暂不接能力。
+ */
+const GAME_SLOTS = [
+  { elementId: 'GameSlot0', url: '/games/harbor-defender/' },
+  { elementId: 'GameSlot1', url: '' },
+  { elementId: 'GameSlot2', url: '' },
+] as const;
+
+/** 槽位配色：未选中藏青蓝，选中浅蓝底加白描边；文字恒白（在 uikitml 中定色） */
+const SLOT_COLOR_BASE = '#1e4e79';
+const SLOT_COLOR_SELECTED = '#5b9bd5';
+const SLOT_BORDER_SELECTED = '#ffffff';
+
+/** 槽位按钮所需的最小元素能力（结构化类型，不深引 UIKit 内部类型） */
+interface SlotElement {
+  setProperties(props: Record<string, unknown>): void;
+}
+
 /** 面板弹出动画参数（原 main：显示 0.8→1，0.3s；隐藏即时归 0） */
 const POP_FROM = 0.8;
 const POP_DURATION = 0.3;
@@ -73,9 +94,14 @@ export class AltarScreenSystem extends createSystem({
   private screenEntity: Entity | null = null;
   /** 三条页眉元素，按元素 id 索引，切 display 用 */
   private headerElements = new Map<string, UIKit.Text | null>();
+  /** GAMES 页列表容器与槽位按钮，切 display / 高亮用 */
+  private gameListElement: UIKit.Text | null = null;
+  private slotElements: Array<UIKit.Text | null> = [];
   private popTween: gsap.core.Tween | null = null;
   /** 已应用的路由，用于在 update 中检测单真值变化（不做每帧分配） */
   private appliedRoute: AltarRouteValue = AltarRoute.None;
+  /** 已应用的高亮槽位，-1 表示尚未应用（首开必刷一次高亮） */
+  private appliedGameIndex = -1;
   /** 复用临时向量：按钮世界坐标/面板落点，零分配 */
   private readonly anchorWorld = new Vector3();
 
@@ -109,6 +135,17 @@ export class AltarScreenSystem extends createSystem({
       this.headerElements.set(id, panel.getElementById<UIKit.Text>(id));
     }
 
+    this.gameListElement = panel.getElementById<UIKit.Text>('GameList');
+    this.slotElements = GAME_SLOTS.map((slot) =>
+      panel.getElementById<UIKit.Text>(slot.elementId),
+    );
+    // 点选槽位 → 只写 gameIndex（thin command），高亮由 update 派生
+    GAME_SLOTS.forEach((slot, index) => {
+      panel.getElementById(slot.elementId)?.addEventListener('click', () => {
+        this.screenEntity?.setValue(AltarScreen, 'gameIndex', index);
+      });
+    });
+
     this.screenEntity = this.world.createTransformEntity(panel, {
       persistent: true,
     });
@@ -130,16 +167,33 @@ export class AltarScreenSystem extends createSystem({
     panel.getElementById('OpClose')?.addEventListener('click', () => {
       this.screenEntity?.setValue(AltarScreen, 'route', AltarRoute.None);
     });
+
+    // 「确定」：GAMES 页整页跳转当前选中槽位的子游戏（会结束当前 XR 会话）
+    panel.getElementById('OpConfirm')?.addEventListener('click', () => {
+      const entity = this.screenEntity;
+      if (!entity) return;
+      const route = entity.getValue(AltarScreen, 'route') as AltarRouteValue;
+      if (route !== AltarRoute.Heart) return;
+      const index = entity.getValue(AltarScreen, 'gameIndex') as number;
+      const url = GAME_SLOTS[index]?.url;
+      if (url) window.location.href = url;
+    });
   }
 
-  /** route 变化才应用一次视觉，其余帧只做一次标量比较 */
+  /** route 或 gameIndex 变化才应用一次视觉，其余帧只做两次标量比较 */
   update(): void {
     const entity = this.screenEntity;
     if (!entity) return;
     const route = entity.getValue(AltarScreen, 'route') as AltarRouteValue;
-    if (route === this.appliedRoute) return;
+    const gameIndex = entity.getValue(AltarScreen, 'gameIndex') as number;
+    if (route === this.appliedRoute && gameIndex === this.appliedGameIndex) {
+      return;
+    }
+    const routeChanged = route !== this.appliedRoute;
     this.appliedRoute = route;
-    this.applyRoute(entity, route);
+    this.appliedGameIndex = gameIndex;
+    if (routeChanged) this.applyRoute(entity, route);
+    this.applyHighlight(gameIndex);
   }
 
   private applyRoute(entity: Entity, route: AltarRouteValue): void {
@@ -153,6 +207,10 @@ export class AltarScreenSystem extends createSystem({
     if (open) {
       this.placeAboveAltarButton(object, route);
       this.setHeader(route);
+      this.setGameListVisible(route === AltarRoute.Heart);
+      if (route === AltarRoute.Heart) {
+        entity.setValue(AltarScreen, 'gameIndex', 0);
+      }
       object.visible = true;
       object.scale.setScalar(POP_FROM);
       this.popTween = gsap.to(object.scale, {
@@ -164,6 +222,7 @@ export class AltarScreenSystem extends createSystem({
       });
     } else {
       this.setHeader(null);
+      this.setGameListVisible(false);
       object.scale.setScalar(0);
       object.visible = false;
     }
@@ -192,6 +251,22 @@ export class AltarScreenSystem extends createSystem({
     for (const [id, element] of this.headerElements) {
       element?.setProperties({ display: id === visibleId ? 'flex' : 'none' });
     }
+  }
+
+  /** GAMES 页列表只在 heart 路由显示 */
+  private setGameListVisible(visible: boolean): void {
+    this.gameListElement?.setProperties({ display: visible ? 'flex' : 'none' });
+  }
+
+  /** 选中槽位浅蓝底加白描边，其余藏青蓝同色描边（视觉无边）；文字恒白不参与 */
+  private applyHighlight(gameIndex: number): void {
+    this.slotElements.forEach((element, i) => {
+      const selected = i === gameIndex;
+      element?.setProperties({
+        backgroundColor: selected ? SLOT_COLOR_SELECTED : SLOT_COLOR_BASE,
+        borderColor: selected ? SLOT_BORDER_SELECTED : SLOT_COLOR_BASE,
+      });
+    });
   }
 
   /** 关面板重显三按钮并重播 0→1 弹出动画；开面板即时归 0 并摘掉交互 */
