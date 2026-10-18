@@ -29,7 +29,9 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     (async () => {
       try {
-        const res = await fetch(event.request);
+        // cache:'reload' 强制绕过 HTTP 缓存直连网络：华为等内核无视 no-store
+        // 做磁盘缓存时，'default' 的子请求同样命中旧副本，network-first 等于失效
+        const res = await fetch(event.request, { cache: 'reload' });
         const cache = await caches.open(CACHE);
         cache.put(event.request, res.clone());
         return res;
