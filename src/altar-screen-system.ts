@@ -17,7 +17,6 @@ import {
   UIKit,
   loadUIKitMLAsset,
 } from '@iwsdk/core';
-import gsap from 'gsap';
 import {
   AltarScreen,
   AltarButton,
@@ -63,19 +62,15 @@ const SLOT_COLOR_BASE = '#1e4e79';
 const SLOT_COLOR_SELECTED = '#5b9bd5';
 const SLOT_BORDER_SELECTED = '#ffffff';
 
-/** 槽位按钮所需的最小元素能力（结构化类型，不深引 UIKit 内部类型） */
-interface SlotElement {
-  setProperties(props: Record<string, unknown>): void;
-}
-
-/** 面板弹出动画参数（原 main：显示 0.8→1，0.3s；隐藏即时归 0） */
+/** 面板弹出动画参数（原 main：显示 0.8→1，0.3s，power2.out） */
 const POP_FROM = 0.8;
 const POP_DURATION = 0.3;
-const POP_EASE = 'power2.out';
 
-/** 祭坛按钮重显动画参数（原 main AltarButton：0→1，0.5s） */
+/** 祭坛按钮重显动画参数（原 main AltarButton：0→1，0.5s，power1.in） */
 const BUTTON_POP_DURATION = 0.5;
-const BUTTON_POP_EASE = 'power1.in';
+
+/** 面板弹出缓动：power2.out */
+const easeOut = (p: number): number => 1 - (1 - p) * (1 - p);
 
 /**
  * 祭坛面板系统：拥有面板实体，并驱动"打开/关闭"这一状态机的全部视觉。
@@ -97,7 +92,6 @@ export class AltarScreenSystem extends createSystem({
   /** GAMES 页列表容器与槽位按钮，切 display / 高亮用 */
   private gameListElement: UIKit.Text | null = null;
   private slotElements: Array<UIKit.Text | null> = [];
-  private popTween: gsap.core.Tween | null = null;
   /** 已应用的路由，用于在 update 中检测单真值变化（不做每帧分配） */
   private appliedRoute: AltarRouteValue = AltarRoute.None;
   /** 已应用的高亮槽位，-1 表示尚未应用（首开必刷一次高亮） */
@@ -180,29 +174,58 @@ export class AltarScreenSystem extends createSystem({
     });
   }
 
-  /** route 或 gameIndex 变化才应用一次视觉，其余帧只做两次标量比较 */
-  update(): void {
+  /**
+   * 每帧两件事：弹出积分（visible 且 pop<1 的面板/按钮，纯标量）+ 单真值变化检测。
+   * 无变化且无进行中弹出时只做少量标量比较，零分配。
+   */
+  update(delta: number): void {
     const entity = this.screenEntity;
-    if (!entity) return;
-    const route = entity.getValue(AltarScreen, 'route') as AltarRouteValue;
-    const gameIndex = entity.getValue(AltarScreen, 'gameIndex') as number;
-    if (route === this.appliedRoute && gameIndex === this.appliedGameIndex) {
-      return;
+    if (entity) {
+      this.advancePanelPop(entity, delta);
+      const route = entity.getValue(AltarScreen, 'route') as AltarRouteValue;
+      const gameIndex = entity.getValue(AltarScreen, 'gameIndex') as number;
+      if (route !== this.appliedRoute || gameIndex !== this.appliedGameIndex) {
+        const routeChanged = route !== this.appliedRoute;
+        this.appliedRoute = route;
+        this.appliedGameIndex = gameIndex;
+        if (routeChanged) this.applyRoute(entity, route);
+        this.applyHighlight(gameIndex);
+      }
     }
-    const routeChanged = route !== this.appliedRoute;
-    this.appliedRoute = route;
-    this.appliedGameIndex = gameIndex;
-    if (routeChanged) this.applyRoute(entity, route);
-    this.applyHighlight(gameIndex);
+    this.advanceButtonPops(delta);
+  }
+
+  /** 面板弹出积分：scale = 0.8 + 0.2×easeOut(pop)，由 pop 派生 */
+  private advancePanelPop(entity: Entity, delta: number): void {
+    const object = entity.object3D;
+    if (!object || !object.visible) return;
+    const pop = entity.getValue(AltarScreen, 'pop') ?? 0;
+    if (pop >= 1) return;
+    const np = Math.min(pop + delta / POP_DURATION, 1);
+    entity.setValue(AltarScreen, 'pop', np);
+    object.scale.setScalar(POP_FROM + (1 - POP_FROM) * easeOut(np));
+  }
+
+  /** 按钮弹出积分：scale = pop²（power1.in），pop≥1 时补上可点 */
+  private advanceButtonPops(delta: number): void {
+    for (const button of this.queries.altarButtons.entities) {
+      const object = button.object3D;
+      if (!object || !object.visible) continue;
+      const pop = button.getValue(AltarButton, 'pop') ?? 0;
+      if (pop >= 1) continue;
+      const np = Math.min(pop + delta / BUTTON_POP_DURATION, 1);
+      button.setValue(AltarButton, 'pop', np);
+      object.scale.setScalar(np * np);
+      if (np >= 1 && !button.hasComponent(RayInteractable)) {
+        button.addComponent(RayInteractable);
+      }
+    }
   }
 
   private applyRoute(entity: Entity, route: AltarRouteValue): void {
     const object = entity.object3D;
     if (!object) return;
     const open = route !== AltarRoute.None;
-
-    this.popTween?.kill();
-    this.popTween = null;
 
     if (open) {
       this.placeAboveAltarButton(object, route);
@@ -212,19 +235,15 @@ export class AltarScreenSystem extends createSystem({
         entity.setValue(AltarScreen, 'gameIndex', 0);
       }
       object.visible = true;
+      entity.setValue(AltarScreen, 'pop', 0);
+      // 首帧即 0.8 避免闪 0，后续帧由 advancePanelPop 积分推进到 1
       object.scale.setScalar(POP_FROM);
-      this.popTween = gsap.to(object.scale, {
-        x: 1,
-        y: 1,
-        z: 1,
-        duration: POP_DURATION,
-        ease: POP_EASE,
-      });
     } else {
       this.setHeader(null);
       this.setGameListVisible(false);
       object.scale.setScalar(0);
       object.visible = false;
+      entity.setValue(AltarScreen, 'pop', 0);
     }
 
     this.setButtonsVisible(!open);
@@ -269,11 +288,16 @@ export class AltarScreenSystem extends createSystem({
     });
   }
 
-  /** 关面板重显三按钮并重播 0→1 弹出动画；开面板即时归 0 并摘掉交互 */
+  /**
+   * 关面板隐藏三按钮（即时归 0、摘交互）；开面板重显并从 pop 0 重新积分。
+   * 可点时机统一由 advanceButtonPops 在 pop≥1 时补 RayInteractable。
+   */
   private setButtonsVisible(visible: boolean): void {
     for (const button of this.queries.altarButtons.entities) {
       const object = button.object3D;
       if (!object) continue;
+
+      button.setValue(AltarButton, 'pop', 0);
 
       if (!visible) {
         object.scale.setScalar(0);
@@ -284,18 +308,8 @@ export class AltarScreenSystem extends createSystem({
         continue;
       }
 
-      object.visible = true;
       object.scale.setScalar(0);
-      if (!button.hasComponent(RayInteractable)) {
-        button.addComponent(RayInteractable);
-      }
-      gsap.to(object.scale, {
-        x: 1,
-        y: 1,
-        z: 1,
-        duration: BUTTON_POP_DURATION,
-        ease: BUTTON_POP_EASE,
-      });
+      object.visible = true;
     }
   }
 
@@ -307,9 +321,5 @@ export class AltarScreenSystem extends createSystem({
         child.receiveShadow = false;
       }
     });
-  }
-
-  destroy(): void {
-    this.popTween?.kill();
   }
 }

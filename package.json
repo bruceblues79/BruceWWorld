@@ -1,6 +1,6 @@
 {
   "name": "brucewworld",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "private": true,
   "type": "module",
   "scripts": {
@@ -20,12 +20,11 @@
     "@pmndrs/uikit": "^1.0.74",
     "@pmndrs/uikit-horizon": "^1.0.74",
     "@pmndrs/uikit-lucide": "^1.0.74",
-    "three": "npm:super-three@0.181.0",
-    "gsap": "^3.15.0"
+    "three": "npm:super-three@0.181.0"
   },
   "devDependencies": {
-    "@iwsdk/reference": "1.0.1",
     "@iwsdk/cli": "1.0.1",
+    "@iwsdk/reference": "1.0.1",
     "@iwsdk/vite-plugin-dev": "1.0.1",
     "@meta-quest/metavr": "^1.8.1",
     "@types/three": "^0.181.0",

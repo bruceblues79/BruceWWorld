@@ -21,6 +21,8 @@ export const ToyboxPhase = createComponent('ToyboxPhase', {
     enum: Phase,
     label: 'Phase',
   },
+  /** 开盒动画已进行秒数：opening 阶段每帧累计，时间轴变换由它派生 */
+  t: { type: Types.Float32, default: 0, label: 'Phase Time (s)' },
 });
 
 /** 显式标签：标记 toybox 实体 */
@@ -61,6 +63,8 @@ export const AltarScreen = createComponent('AltarScreen', {
     default: 0,
     label: 'Game Index',
   },
+  /** 面板弹出进度 0→1：打开时从 0 积分（scale 0.8→1 派生），关闭即时归 0 */
+  pop: { type: Types.Float32, default: 0, label: 'Pop' },
 });
 
 /** 显式标签 + 数据：标记祭坛按钮实体，并记录它打开哪一个祭坛页 */
@@ -71,6 +75,8 @@ export const AltarButton = createComponent('AltarButton', {
     enum: AltarKind,
     label: 'Altar',
   },
+  /** 按钮弹出进度 0→1：visible 且 pop<1 时积分（scale=p*p 派生），pop≥1 可点 */
+  pop: { type: Types.Float32, default: 0, label: 'Pop' },
 });
 
 /** 只旋转不位移的 billboard：+Z 面朝向观察者 */
