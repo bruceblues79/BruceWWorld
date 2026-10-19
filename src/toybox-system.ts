@@ -18,10 +18,10 @@ import {
   Color,
   Vector3,
   Texture,
+  Types,
   loadUIKitMLAsset,
 } from '@iwsdk/core';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import gsap from 'gsap';
 import {
   ToyboxPhase,
   ToyboxTag,
@@ -35,12 +35,11 @@ const MODEL_POSITION: [number, number, number] = [0, 0.3, -2];
 /** TAP 按钮在 toybox 局部坐标中的偏移 */
 const TAP_LOCAL_OFFSET: [number, number, number] = [0, 0.3, 0.65];
 
-/** 开盒动画参数（增量驱动，节点自带 Blender 初始姿态） */
-const HINGE_SPIN = -Math.PI;
-const ROOT_SHIFT_X = -0.6;
-const ROTATE_TURN = -Math.PI / 2;
-const PAUSE_SECONDS = 0.3;
-const EASE = 'power2.inOut';
+const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
+
+/** 开盒三段共用的缓动：power2.inOut */
+const easeInOut = (p: number): number =>
+  p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
 
 /** 水面节点名称 */
 const WATER_NODE_NAMES = ['water_l', 'water_r'] as const;
@@ -82,15 +81,71 @@ const waterFragmentShader = /* glsl */ `
   }
 `;
 
-export class ToyboxSystem extends createSystem({
-  toybox: { required: [ToyboxTag, ToyboxPhase] },
-  tapButton: { required: [RayInteractable, Pressed] },
-}) {
+export class ToyboxSystem extends createSystem(
+  {
+    toybox: { required: [ToyboxTag, ToyboxPhase] },
+    tapButton: { required: [RayInteractable, Pressed] },
+  },
+  {
+    // 开盒动画参数：相对初始姿态快照的增量与时长，update 内标量积分，编辑器可调
+    hingeSpin: {
+      type: Types.Float32,
+      default: -Math.PI,
+      step: 0.05,
+      label: 'Hinge Spin (rad)',
+    },
+    rootShiftX: {
+      type: Types.Float32,
+      default: -0.6,
+      step: 0.05,
+      label: 'Root Shift X',
+    },
+    rotateTurn: {
+      type: Types.Float32,
+      default: -Math.PI / 2,
+      step: 0.05,
+      label: 'Rotate Turn (rad)',
+    },
+    hingeDuration: {
+      type: Types.Float32,
+      default: 1,
+      step: 0.1,
+      min: 0.05,
+      label: 'Hinge Duration (s)',
+    },
+    shiftDuration: {
+      type: Types.Float32,
+      default: 0.6,
+      step: 0.1,
+      min: 0.05,
+      label: 'Shift Duration (s)',
+    },
+    rotateDuration: {
+      type: Types.Float32,
+      default: 1,
+      step: 0.1,
+      min: 0.05,
+      label: 'Rotate Duration (s)',
+    },
+    pauseSeconds: {
+      type: Types.Float32,
+      default: 0.3,
+      step: 0.1,
+      min: 0,
+      label: 'Pause Between Steps (s)',
+    },
+  },
+) {
   private toyboxEntity: Entity | null = null;
   private toyboxObject: Object3D | null = null;
   private tapButtonEntity: Entity | null = null;
-  private gsapTimeline: gsap.core.Timeline | null = null;
   private hdrTexture: Texture | null = null;
+  /** 开盒时间轴的节点与初始姿态快照（Blender 导出姿态），update 内纯标量积分 */
+  private hingeNode: Object3D | null = null;
+  private rotateNode: Object3D | null = null;
+  private hingeStartZ = 0;
+  private rotateStartY = 0;
+  private rootStartX = 0;
 
   init(): void {
     void this.bootstrap().catch((err) => {
@@ -134,6 +189,10 @@ export class ToyboxSystem extends createSystem({
     }
 
     this.toyboxObject = scene;
+    this.hingeNode = scene.getObjectByName('root_hinge') ?? null;
+    this.rotateNode = scene.getObjectByName('root_rotate') ?? null;
+    this.hingeStartZ = this.hingeNode?.rotation.z ?? 0;
+    this.rotateStartY = this.rotateNode?.rotation.y ?? 0;
     this.toyboxEntity = this.world.createTransformEntity(scene, {
       persistent: true,
     });
@@ -144,6 +203,7 @@ export class ToyboxSystem extends createSystem({
     if (transform) {
       transform.position.set(...MODEL_POSITION);
       transform.scale.setScalar(1);
+      this.rootStartX = transform.position.x;
     }
   }
 
@@ -184,38 +244,66 @@ export class ToyboxSystem extends createSystem({
     }
   }
 
-  private startOpeningAnimation(): void {
-    if (!this.toyboxEntity) return;
+  /** 开盒命令：只写状态（thin command），时间轴推进全部在 update 派生 */
+  private startOpening(): void {
+    const entity = this.toyboxEntity;
+    if (!entity) return;
 
-    this.toyboxEntity.setValue(ToyboxPhase, 'phase', 'opening');
+    entity.setValue(ToyboxPhase, 'phase', 'opening');
+    entity.setValue(ToyboxPhase, 't', 0);
 
     if (this.tapButtonEntity?.object3D) {
       this.tapButtonEntity.object3D.visible = false;
     }
+  }
 
-    const hinge = this.toyboxObject?.getObjectByName('root_hinge');
-    const rotate = this.toyboxObject?.getObjectByName('root_rotate');
-    if (!hinge || !rotate || !this.toyboxObject) return;
+  /** opening 阶段累计 t 并由 t 推导三段变换，到点写 opened 并创建祭坛按钮 */
+  private advanceOpening(delta: number): void {
+    const entity = this.toyboxEntity;
+    if (!entity || entity.getValue(ToyboxPhase, 'phase') !== 'opening') return;
 
-    this.gsapTimeline = gsap.timeline({
-      onComplete: () => {
-        this.toyboxEntity?.setValue(ToyboxPhase, 'phase', 'opened');
-        this.createAltarButtons();
-      },
-    });
+    const cfg = this.config;
+    const total =
+      cfg.hingeDuration.peek() +
+      cfg.shiftDuration.peek() +
+      cfg.rotateDuration.peek() +
+      cfg.pauseSeconds.peek() * 2;
+    const t = Math.min((entity.getValue(ToyboxPhase, 't') ?? 0) + delta, total);
 
-    this.gsapTimeline
-      .to(hinge.rotation, { z: `+=${HINGE_SPIN}`, duration: 1, ease: EASE })
-      .to(
-        this.toyboxObject.position,
-        { x: `+=${ROOT_SHIFT_X}`, duration: 0.6, ease: EASE },
-        `+=${PAUSE_SECONDS}`,
-      )
-      .to(
-        rotate.rotation,
-        { y: `+=${ROTATE_TURN}`, duration: 1, ease: EASE },
-        `+=${PAUSE_SECONDS}`,
-      );
+    this.applyOpeningProgress(t);
+
+    if (t >= total) {
+      entity.setValue(ToyboxPhase, 'phase', 'opened');
+      void this.createAltarButtons();
+    } else {
+      entity.setValue(ToyboxPhase, 't', t);
+    }
+  }
+
+  /** 由 t 绝对推导三段变换（初始姿态快照 + 增量 × 缓动），零分配 */
+  private applyOpeningProgress(t: number): void {
+    const cfg = this.config;
+    const pause = cfg.pauseSeconds.peek();
+    const hingeDur = cfg.hingeDuration.peek();
+    const shiftDur = cfg.shiftDuration.peek();
+
+    if (this.hingeNode) {
+      const p1 = clamp01(t / hingeDur);
+      this.hingeNode.rotation.z =
+        this.hingeStartZ + cfg.hingeSpin.peek() * easeInOut(p1);
+    }
+
+    if (this.toyboxObject) {
+      const p2 = clamp01((t - hingeDur - pause) / shiftDur);
+      this.toyboxObject.position.x =
+        this.rootStartX + cfg.rootShiftX.peek() * easeInOut(p2);
+    }
+
+    if (this.rotateNode) {
+      const p3 = clamp01((t - hingeDur - pause - shiftDur - pause) / cfg.rotateDuration.peek());
+      this.rotateNode.rotation.y =
+        this.rotateStartY + cfg.rotateTurn.peek() * easeInOut(p3);
+    }
   }
 
   private async createAltarButtons(): Promise<void> {
@@ -266,31 +354,17 @@ export class ToyboxSystem extends createSystem({
       // lockY: false 让俯仰也一起对准，面板上下左右都正对玩家
       entity.addComponent(Billboard, { lockY: false });
 
-      gsap.to(entity.object3D.scale, {
-        x: 1,
-        y: 1,
-        z: 1,
-        duration: 0.5,
-        ease: 'power1.in',
-        onComplete: () => {
-          entity.addComponent(RayInteractable);
-        },
-      });
+      // 弹出积分与可点时机（pop≥1 加 RayInteractable）统一由 AltarScreenSystem 驱动
     }
   }
 
   private tapButtonTriggered = false;
 
-  update(): void {
+  update(delta: number): void {
     if (!this.tapButtonTriggered && this.tapButtonEntity?.hasComponent(Pressed)) {
       this.tapButtonTriggered = true;
-      this.startOpeningAnimation();
+      this.startOpening();
     }
-  }
-
-  destroy(): void {
-    if (this.gsapTimeline) {
-      this.gsapTimeline.kill();
-    }
+    this.advanceOpening(delta);
   }
 }
