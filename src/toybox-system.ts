@@ -30,8 +30,8 @@ import {
 } from './components.js';
 import type { AltarKindValue } from './components.js';
 
-/** Toybox 世界锚点（原 main 分支 MODEL_POSITION） */
-const MODEL_POSITION: [number, number, number] = [0, 0.3, -2];
+/** Toybox 世界锚点（原 main 分支 MODEL_POSITION，整体 +Z 0.4 与相机/灯光同步） */
+const MODEL_POSITION: [number, number, number] = [0, 0.3, -1.6];
 /** TAP 按钮在 toybox 局部坐标中的偏移 */
 const TAP_LOCAL_OFFSET: [number, number, number] = [0, 0.3, 0.65];
 
@@ -90,7 +90,7 @@ export class ToyboxSystem extends createSystem(
     // 整体缩放（含 TAP/祭坛子面板，随根变换继承）
     rootScale: {
       type: Types.Float32,
-      default: 0.6,
+      default: 0.7,
       step: 0.05,
       min: 0.05,
       label: 'Root Scale',
