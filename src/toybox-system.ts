@@ -303,8 +303,10 @@ export class ToyboxSystem extends createSystem(
 
     if (this.toyboxObject) {
       const p2 = clamp01((t - hingeDur - pause) / shiftDur);
+      // 位移是世界空间量，按 rootScale 等比缩小，保证缩放后开盒仍相对居中
       this.toyboxObject.position.x =
-        this.rootStartX + cfg.rootShiftX.peek() * easeInOut(p2);
+        this.rootStartX +
+        cfg.rootShiftX.peek() * cfg.rootScale.peek() * easeInOut(p2);
     }
 
     if (this.rotateNode) {
