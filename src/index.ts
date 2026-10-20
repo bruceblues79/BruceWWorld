@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { World, AssetManager } from '@iwsdk/core';
+import { RayDisplayMode, type RayPointer, World, AssetManager } from '@iwsdk/core';
 import projectOptions from 'virtual:iwsdk-project';
 import { AltarScreenSystem } from './altar-screen-system.js';
 import { BillboardSystem } from './billboard-system.js';
@@ -21,6 +21,18 @@ World.create(
   document.getElementById('scene-container') as HTMLDivElement,
   projectOptions,
 ).then((world) => {
+  // XR 远射线：手在追踪中即恒显（IWSDK 默认 VisibleOnIntersection，仅命中
+  // 可交互物才渐显）。RayPointer 在私有字段后无公开开关，用窄结构断言访问；
+  // 追踪丢失/近场指针接管仍会隐藏。与 HarborDefender 同款。
+  for (const hand of ['left', 'right'] as const) {
+    const rayVisual = (
+      world.input.xr.multiPointers[hand] as unknown as {
+        ray: { visual: RayPointer };
+      }
+    ).ray.visual;
+    rayVisual.rayDisplayMode = RayDisplayMode.Visible;
+  }
+
   world.registerSystem(StartCameraSystem);
   world.registerSystem(ToyboxSystem);
   world.registerSystem(AltarScreenSystem);

@@ -10,14 +10,14 @@ import { MathUtils, createSystem } from '@iwsdk/core';
 // addons 与 @iwsdk/core 引用同一实例，不会产生第二份 three
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-/** 相机注视点（原主页 OrbitControls target，iwsdk-port-notes §2.1） */
-const ORBIT_TARGET: [number, number, number] = [0, 0.6, -2];
+/** 相机注视点（原主页 OrbitControls target，随 toybox 整体 +Z 0.4 同步） */
+const ORBIT_TARGET: [number, number, number] = [0, 0.6, -1.6];
 /**
  * 相机初始局部位置（相对 world.player，非沉浸态 player 位于原点）。
  * 取旧 zoom 最远（maxDistance）端的视点作为新默认：沿原视线方向后移 DISTANCE_LIMIT，
  * 下方 min/maxDistance clamp 公式不变，行程窗口随之整体平移。
  */
-const CAMERA_POSITION: [number, number, number] = [0, 1.882, 0.443];
+const CAMERA_POSITION: [number, number, number] = [0, 1.882, 0.843];
 /** 俯仰限制：初始极角 ±10° */
 const PITCH_LIMIT_DEG = 10;
 /** 视距限制：初始距离 ±0.5 */

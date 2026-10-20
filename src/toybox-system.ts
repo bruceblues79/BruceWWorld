@@ -30,8 +30,8 @@ import {
 } from './components.js';
 import type { AltarKindValue } from './components.js';
 
-/** Toybox 世界锚点（原 main 分支 MODEL_POSITION） */
-const MODEL_POSITION: [number, number, number] = [0, 0.3, -2];
+/** Toybox 世界锚点（原 main 分支 MODEL_POSITION，整体 +Z 0.4 与相机/灯光同步） */
+const MODEL_POSITION: [number, number, number] = [0, 0.3, -1.6];
 /** TAP 按钮在 toybox 局部坐标中的偏移 */
 const TAP_LOCAL_OFFSET: [number, number, number] = [0, 0.3, 0.65];
 
@@ -87,6 +87,14 @@ export class ToyboxSystem extends createSystem(
     tapButton: { required: [RayInteractable, Pressed] },
   },
   {
+    // 整体缩放（含 TAP/祭坛子面板，随根变换继承）
+    rootScale: {
+      type: Types.Float32,
+      default: 0.7,
+      step: 0.05,
+      min: 0.05,
+      label: 'Root Scale',
+    },
     // 开盒动画参数：相对初始姿态快照的增量与时长，update 内标量积分，编辑器可调
     hingeSpin: {
       type: Types.Float32,
@@ -202,7 +210,7 @@ export class ToyboxSystem extends createSystem(
     const transform = this.toyboxEntity.object3D;
     if (transform) {
       transform.position.set(...MODEL_POSITION);
-      transform.scale.setScalar(1);
+      transform.scale.setScalar(this.config.rootScale.peek());
       this.rootStartX = transform.position.x;
     }
   }
@@ -295,8 +303,10 @@ export class ToyboxSystem extends createSystem(
 
     if (this.toyboxObject) {
       const p2 = clamp01((t - hingeDur - pause) / shiftDur);
+      // 位移是世界空间量，按 rootScale 等比缩小，保证缩放后开盒仍相对居中
       this.toyboxObject.position.x =
-        this.rootStartX + cfg.rootShiftX.peek() * easeInOut(p2);
+        this.rootStartX +
+        cfg.rootShiftX.peek() * cfg.rootScale.peek() * easeInOut(p2);
     }
 
     if (this.rotateNode) {

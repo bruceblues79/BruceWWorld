@@ -18,7 +18,7 @@
     {
       "id": "KeyLight",
       "transform": {
-        "position": [0, 5.75, -5.5],
+        "position": [0, 5.75, -5.1],
         "rotationDeg": [-55, -20, 0]
       },
       "components": {
