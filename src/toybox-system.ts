@@ -87,6 +87,14 @@ export class ToyboxSystem extends createSystem(
     tapButton: { required: [RayInteractable, Pressed] },
   },
   {
+    // 整体缩放（含 TAP/祭坛子面板，随根变换继承）
+    rootScale: {
+      type: Types.Float32,
+      default: 0.6,
+      step: 0.05,
+      min: 0.05,
+      label: 'Root Scale',
+    },
     // 开盒动画参数：相对初始姿态快照的增量与时长，update 内标量积分，编辑器可调
     hingeSpin: {
       type: Types.Float32,
@@ -202,7 +210,7 @@ export class ToyboxSystem extends createSystem(
     const transform = this.toyboxEntity.object3D;
     if (transform) {
       transform.position.set(...MODEL_POSITION);
-      transform.scale.setScalar(1);
+      transform.scale.setScalar(this.config.rootScale.peek());
       this.rootStartX = transform.position.x;
     }
   }
