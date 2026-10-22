@@ -12,6 +12,7 @@ import { BillboardSystem } from './billboard-system.js';
 import { StartCameraSystem } from './start-camera.js';
 import { ToyboxSystem } from './toybox-system.js';
 import { installXRButton } from './xr-button.js';
+import { installHandPriorityArbitration } from './xr-hand-arbitration.js';
 import './index.css';
 
 // 版本可观测：强刷后打开控制台即可确认线上版本
@@ -32,6 +33,10 @@ World.create(
     ).ray.visual;
     rayVisual.rayDisplayMode = RayDisplayMode.Visible;
   }
+
+  // 手部优先仲裁：跳过 runtime 注入的无 gamepad 虚拟控制器，防止其抢走 primary
+  // （Swan 浏览器捏合时注入，导致射线变蓝后指针永久失效，见 xr-hand-arbitration.ts）
+  installHandPriorityArbitration(world);
 
   world.registerSystem(StartCameraSystem);
   world.registerSystem(ToyboxSystem);
