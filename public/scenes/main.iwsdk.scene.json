@@ -30,7 +30,9 @@
           "color": [1, 1, 1, 1],
           "intensity": 3.14,
           "castShadow": true,
+          "shadowMapSize": "2048",
           "shadowCameraSize": 12,
+          "shadowBias": -0.0005,
           "shadowNormalBias": 0.008
         }
       }
