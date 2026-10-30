@@ -36,15 +36,19 @@ body,
   height: 100%;
 }
 
-/* body 渐变 = 唯一天空真值：AR 模式下画布透明直通，加载与加载后同一渐变，无突变 */
+/* body 渐变 = 唯一天空真值：AR 模式下画布透明直通，加载与加载后同一渐变，无突变。
+   三色标取 DomeGradient 在出生视角下的屏幕实际色带（非组件原色）：fov 50° +
+   出生俯仰 27.7°（start-camera.ts 眼位注视目标推导）时整屏落在 equator→ground
+   过渡段，顶边 m=0.047 / 屏心 m=0.465 / 底边 m=0.795（m 为向 ground 的插值系数）。
+   换天或改相机俯仰/fov 需同步重算 */
 body {
   margin: 0;
   overflow: hidden;
   background: linear-gradient(
     to bottom,
-    #5c9ef2 0%,
-    #d9ebfa 50%,
-    #294770 100%
+    #c3d6eb 0%,
+    #718195 50%,
+    #303e50 100%
   );
 }
 
