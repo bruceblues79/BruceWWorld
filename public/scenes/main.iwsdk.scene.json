@@ -2,17 +2,21 @@
   "version": "iwsdk.scene.v1",
   "units": "meters",
   "components": {
+    "com.iwsdk.components.DomeGradient": {
+      "sky": [0.45, 0.66, 0.92, 1],
+      "equator": [0.8, 0.88, 0.96, 1],
+      "ground": [0.03, 0.08, 0.15, 1],
+      "intensity": 1
+    },
     "com.iwsdk.components.IBLTexture": {
       "src": "starter-space.hdr",
-      "intensity": 1.2
+      "intensity": 1
     }
   },
   "resources": {},
   "environment": {
     "shadows": true,
-    "shadowMapType": "pcf-soft",
-    "toneMapping": "aces",
-    "exposure": 1.05
+    "shadowMapType": "pcf-soft"
   },
   "nodes": [
     {
@@ -23,7 +27,7 @@
       },
       "components": {
         "com.iwsdk.components.DirectionalLight": {
-          "color": [1, 0.94, 0.84, 1],
+          "color": [1, 0.98, 0.95, 1],
           "intensity": 2.6,
           "castShadow": true,
           "shadowMapSize": "2048",
